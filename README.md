@@ -109,4 +109,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📧 Contact
 
-Project Link: [https://github.com/yourusername/dailyfit](https://github.com/AlexBoyev/dailyfit)
+Project Link: [https://github.com/AlexBoyev/dailyfit](https://github.com/AlexBoyev/dailyfit)
