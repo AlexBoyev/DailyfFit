@@ -1,0 +1,287 @@
+{
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": [
+        "hi",
+        "hello",
+        "hey",
+        "good morning",
+        "good evening",
+        "hey there",
+        "hi there",
+        "greetings"
+      ],
+      "responses": [
+        "Hello! Welcome to DailyFit. How can I help you with your training or nutrition today?",
+        "Hi there! I'm your DailyFit assistant. Need a workout plan or meal menu?",
+        "Hey! Thanks for choosing DailyFit. What fitness or nutrition info can I provide?"
+      ]
+    },
+    {
+      "tag": "goodbye",
+      "patterns": [
+        "bye",
+        "goodbye",
+        "see you",
+        "later",
+        "see you later",
+        "cya",
+        "take care"
+      ],
+      "responses": [
+        "Goodbye! Keep pushing toward your goals—see you next time!",
+        "Thanks for stopping by DailyFit. Stay active and eat well!",
+        "See you soon at DailyFit. Don’t forget to log today’s workout!"
+      ]
+    },
+    {
+      "tag": "hours",
+      "patterns": [
+        "what are your hours",
+        "when are you open",
+        "opening hours",
+        "closing time",
+        "what time do you open",
+        "what time do you close"
+      ],
+      "responses": [
+        "We’re open Monday–Friday from 5 AM to 11 PM, and Saturday–Sunday from 7 AM to 9 PM.",
+        "Our hours: Mon–Fri 5 AM–11 PM, Sat–Sun 7 AM–9 PM.",
+        "DailyFit is open weekdays 5 AM–11 PM and weekends 7 AM–9 PM."
+      ]
+    },
+    {
+      "tag": "build_plan",
+      "patterns": [
+        "build a training plan",
+        "create a workout plan",
+        "custom training plan",
+        "plan workout",
+        "i need a workout plan"
+      ],
+      "responses": [
+        "Absolutely—what’s your main goal? (e.g. weight loss, getting fit, building muscle)",
+        "Sure! Tell me your goal—lose weight, get fit, or gain muscle—and I’ll craft a plan.",
+        "I can help you build a plan. Which goal interests you: fat loss, general fitness, or muscle gain?"
+      ]
+    },
+    {
+      "tag": "goal_weight_loss",
+      "patterns": [
+        "weight loss",
+        "lose weight",
+        "slimming plan",
+        "fat loss"
+      ],
+      "responses": [
+        "For weight loss, we combine cardio and strength training with a calorie-deficit menu. Would you like a 4-week sample?",
+        "A fat-loss plan includes HIIT, steady cardio, and balanced meals under your daily calorie target. Ready to see details?",
+        "Let’s set up 3 cardio days, 2 strength days, and a tailored meal plan. Shall I send it over?"
+      ]
+    },
+    {
+      "tag": "goal_fitness",
+      "patterns": [
+        "getting fit",
+        "fitness plan",
+        "improve fitness",
+        "general fitness"
+      ],
+      "responses": [
+        "A balanced fitness plan mixes cardio, strength, and flexibility. How many days per week can you train?",
+        "To get fit, we’ll alternate cardio and full-body strength sessions. What’s your weekly availability?",
+        "Fitness goals work best with 3–4 workouts weekly. Let me know your schedule and I’ll create your plan."
+      ]
+    },
+    {
+      "tag": "goal_muscle_gain",
+      "patterns": [
+        "gain muscle",
+        "build muscle",
+        "muscle mass",
+        "bulk up"
+      ],
+      "responses": [
+        "Muscle-gain plans focus on heavier lifts and a protein-rich menu. Are you a beginner, intermediate, or advanced lifter?",
+        "To bulk up, we’ll do 4 strength days per week + a calorie-surplus nutrition plan. Ready for your personalized routine?",
+        "Building mass takes progressive overload + extra calories. Tell me your gym experience and I’ll tailor your plan."
+      ]
+    },
+    {
+      "tag": "nutrition_menu",
+      "patterns": [
+        "nutrition menu",
+        "meal plan",
+        "diet plan",
+        "food menu",
+        "custom nutrition"
+      ],
+      "responses": [
+        "Great—what’s your goal? Weight loss, maintenance, or muscle gain? I’ll match your meal plan accordingly.",
+        "Tell me your daily calorie target or dietary preferences (e.g. vegetarian, gluten-free), and I’ll craft your menu.",
+        "I can coordinate a 7-day nutrition menu for your goals. Any allergies or dislikes I should know about?"
+      ]
+    },
+    {
+      "tag": "classes",
+      "patterns": [
+        "classes",
+        "group fitness",
+        "yoga",
+        "spinning",
+        "zumba",
+        "pilates",
+        "class schedule",
+        "what classes do you offer"
+      ],
+      "responses": [
+        "We offer Yoga, Spinning, HIIT, Zumba, Pilates, and more—check your dashboard for the full weekly schedule.",
+        "Our group sessions include Yoga, HIIT, BodyPump, Zumba, and Pilates. Which class interests you today?",
+        "We run over 20 classes weekly: Yoga, Spinning, HIIT, Zumba, and Pilates… let me know which one you’d like to book."
+      ]
+    },
+    {
+      "tag": "facilities",
+      "patterns": [
+        "facilities",
+        "equipment",
+        "machines",
+        "amenities",
+        "do you have a pool",
+        "sauna",
+        "locker room",
+        "showers"
+      ],
+      "responses": [
+        "Our gym has state-of-the-art cardio & strength equipment, free weights, functional area, locker rooms, showers, and sauna.",
+        "We feature modern machines, a free-weight section, functional training zone, lockers with showers, and a sauna.",
+        "You’ll find treadmills, bikes, weight racks, a functional zone, plus clean locker rooms, showers, and sauna."
+      ]
+    },
+    {
+      "tag": "personal_training",
+      "patterns": [
+        "personal trainer",
+        "one on one training",
+        "private sessions",
+        "fitness coach",
+        "trainer"
+      ],
+      "responses": [
+        "We offer personal training starting at $50/hour. Would you like to book a free consultation?",
+        "Our certified trainers can provide 1-on-1 coaching. Sessions start at $50/hour with package discounts.",
+        "Personal training is available—let me know if you’d like to schedule a complimentary assessment."
+      ]
+    },
+    {
+      "tag": "location",
+      "patterns": [
+        "where are you located",
+        "address",
+        "directions",
+        "how do I get there",
+        "parking",
+        "location"
+      ],
+      "responses": [
+        "We’re at 123 Fitness Street, Downtown. Free member parking is available on-site.",
+        "Find us at 123 Fitness Street. We offer free parking and easy public transport access.",
+        "Our address is 123 Fitness Street, Downtown—ample parking and steps from the subway."
+      ]
+    },
+    {
+      "tag": "trial",
+      "patterns": [
+        "free trial",
+        "trial pass",
+        "guest pass",
+        "day pass",
+        "try before buy",
+        "sample"
+      ],
+      "responses": [
+        "Yes! We offer a 3-day free trial. Stop by with your ID or sign up online for your guest pass.",
+        "New here? Get a complimentary 3-day pass. Register online or at the front desk.",
+        "We’d love for you to try us out—enjoy a 3-day free trial by signing up on our website."
+      ]
+    },
+    {
+      "tag": "covid",
+      "patterns": [
+        "covid",
+        "covid-19",
+        "coronavirus",
+        "safety measures",
+        "sanitization",
+        "mask policy"
+      ],
+      "responses": [
+        "We follow all health guidelines: frequent sanitization, spaced-out equipment, and mandatory mask zones.",
+        "Your safety is our priority! We’ve enhanced cleaning, provide sanitization stations, and enforce social distancing.",
+        "We maintain rigorous cleaning protocols, air filtration, and spacing on all machines per COVID-19 guidelines."
+      ]
+    },
+    {
+      "tag": "cancellation",
+      "patterns": [
+        "cancel membership",
+        "how to cancel",
+        "cancellation policy",
+        "stop membership",
+        "end subscription"
+      ],
+      "responses": [
+        "To cancel, please give 30 days’ notice via the member portal or at the front desk.",
+        "Our cancellation policy requires 30 days’ written notice—start through your online account or in person.",
+        "You can cancel with 30 days’ notice. Log into your portal or visit us to process your cancellation."
+      ]
+    },
+    {
+      "tag": "leave_message",
+      "patterns": [
+        "leave a message",
+        "send message",
+        "email support",
+        "contact support",
+        "leave feedback"
+      ],
+      "responses": [
+        "Sure! Please type the message you'd like to send to our team, and I'll forward it to DailyFit support.",
+        "Absolutely—what would you like to tell us? Please enter your message and we'll get back to you via email.",
+        "I'm here to pass along your feedback or questions. Go ahead and write your message now."
+      ]
+    },
+    {
+      "tag": "thanks",
+      "patterns": [
+        "thanks",
+        "thank you",
+        "appreciate it",
+        "great",
+        "helpful"
+      ],
+      "responses": [
+        "You’re welcome! Anything else I can help you with today?",
+        "Happy to help! Let me know if you need more information.",
+        "My pleasure! Feel free to ask if you have other questions."
+      ]
+    },
+    {
+      "tag": "help",
+      "patterns": [
+        "help",
+        "what can you do",
+        "options",
+        "assist me",
+        "commands",
+        "how to use",
+        "help me",
+        "what are my options"
+      ],
+  "responses": [
+    "Here’s what I can help you with:\n\u2022 View gym hours (e.g. \"What are your hours?\")\n\u2022 Build a training plan (e.g. \"I need a workout plan.\")\n\u2022 Get a nutrition menu (e.g. \"Show me a meal plan.\")\n\u2022 Browse classes (e.g. \"What classes do you offer?\")\n\u2022 Learn about facilities (e.g. \"What equipment do you have?\")\n\u2022 Ask about personal training (e.g. \"Tell me about personal trainers.\")\n\u2022 Find our location (e.g. \"Where are you located?\")\n\u2022 Sign up for a free trial (e.g. \"Do you have a trial pass?\")\n\u2022 Cancel or pause membership (e.g. \"How do I cancel?\")\n\u2022 Leave us a message (e.g. \"I want to leave feedback.\")\n\nJust type any of those commands to get started!"
+  ]
+    }
+  ]
+}

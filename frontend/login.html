@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DailyFit — Login</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <!-- FontAwesome -->
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --primary-color: #ff6b6b;
+      --dark-bg: #121212;
+      --text-light: #f9f9f9;
+    }
+    * { box-sizing: border-box; margin:0; padding:0 }
+    body, html { height:100%; font-family:'Poppins',sans-serif; }
+    a { text-decoration:none; color:inherit; }
+    header {
+      position:fixed; top:0; width:100%; height:70px;
+      background:var(--dark-bg); color:var(--text-light);
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 2rem; z-index:1000;
+    }
+    header .logo { display:flex; align-items:center; }
+    header .logo img { height:40px; margin-right:.5rem; }
+    header .logo span { font-size:1.5rem; font-weight:600; }
+    nav a {
+      margin-left:1.5rem; font-weight:500; transition:color .3s; line-height:70px;
+      color:var(--text-light);
+    }
+    nav a:hover { color:var(--primary-color); }
+    .hero {
+      padding-top:70px;
+      height:100vh;
+      background:url('/static/images/gym1.jpg') center/cover no-repeat;
+      position:relative; display:flex; align-items:center; justify-content:center;
+    }
+    .hero::before {
+      content:''; position:absolute; inset:0;
+      background:rgba(0,0,0,.5);
+    }
+    .hero-content {
+      position:relative; z-index:1;
+      background:rgba(255,255,255,.1); backdrop-filter:blur(8px);
+      padding:2rem; border-radius:8px; width:90%; max-width:400px;
+      color:var(--text-light); text-align:center;
+      animation:fadeIn 1s ease-out;
+    }
+    .hero-content h2 { margin-bottom:1rem; font-size:1.75rem; }
+    .hero-content input {
+      width:100%; padding:.75rem; margin-bottom:1rem;
+      border:none; border-radius:4px; font-size:1rem;
+    }
+    .hero-content button {
+      width:100%; padding:.75rem;
+      border:none; border-radius:4px;
+      background:var(--primary-color); color:#fff;
+      font-size:1rem; cursor:pointer;
+      transition:background .3s;
+    }
+    .hero-content button:hover { background:#e65555; }
+    #login-response { margin-top:.5rem; color:#ffdf00; }
+    #captcha-container { display:none; margin-top:1rem; }
+    @keyframes fadeIn { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <img src="/static/images/logo.png" alt="DailyFit Logo">
+      <span>DailyFit</span>
+    </div>
+    <nav>
+      <a href="/register">Register</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h2>Welcome Back</h2>
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button id="loginBtn">Login</button>
+      <p id="login-response"></p>
+      <div id="captcha-container">
+        <p>Please solve this captcha:</p>
+        <img src="https://dummyimage.com/150x50/ffffff/000000&text=7+%2B+2+%3D+?" alt="captcha">
+        <input type="text" id="captcha" placeholder="Your answer">
+      </div>
+    </div>
+  </section>
+
+  <script>
+    let attempts = 0;
+    document.getElementById('loginBtn').onclick = async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const responseEl = document.getElementById('login-response');
+
+      // If 3+ fails, require captcha
+      if (attempts >= 3) {
+        const ans = document.getElementById('captcha').value.trim();
+        if (ans !== '9') {
+          return responseEl.innerText = 'Captcha incorrect.';
+        }
+      }
+
+      const res = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        attempts++;
+        responseEl.innerText = 'Error: ' + data.detail;
+        if (attempts === 3) {
+          document.getElementById('captcha-container').style.display = 'block';
+        }
+      } else {
+        // on success, store and redirect
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('name', data.name);
+        window.location.href = '/dashboard';
+      }
+    };
+  </script>
+</body>
+</html>

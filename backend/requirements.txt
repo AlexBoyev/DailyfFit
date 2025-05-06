@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+mysql-connector-python
+python-dotenv
+bcrypt
+python-jose[cryptography]
+fastapi[all]
+jinja2
