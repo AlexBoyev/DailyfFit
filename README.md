@@ -26,7 +26,7 @@ DailyFit is a comprehensive fitness application designed to help users create pe
 - **Backend**: Python with FastAPI
 - **Database**: MySQL
 - **Containerization**: Docker & Docker Compose
-- **Frontend**: React.js with Tailwind CSS
+- **Frontend**: HTML/CSS: Fully responsive user interface.
 - **Authentication**: JWT-based secure login system
 - **API**: RESTful architecture for frontend-backend communication
 
