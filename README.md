@@ -62,7 +62,7 @@ DailyFit follows a modern three-tier architecture:
 
 3. Access the application:
    ```
-   Frontend: http://localhost:3001
+   Frontend: http://localhost:8001
    API Documentation: http://localhost:8001/docs
    ```
 
