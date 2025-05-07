@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS Users (
     password_hash    VARCHAR(255),
     role             ENUM('user','admin'),
     address          VARCHAR(255),
-    phone            VARCHAR(50)
+    phone            VARCHAR(50),
+    plan             VARCHAR(50) DEFAULT 'Free plan'
 );
 
 CREATE TABLE IF NOT EXISTS TrainingPlans (

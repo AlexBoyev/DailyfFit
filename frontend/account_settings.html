@@ -4,270 +4,240 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DailyFit — Account Settings</title>
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
-  <!-- FontAwesome for icons -->
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --primary-color: #ff6b6b;
-      --secondary-color: #1e90ff;
-      --dark-bg: #121212;
-      --light-bg: #f4f4f4;
-      --text-light: #f9f9f9;
-      --text-dark: #222;
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
     }
-    * { box-sizing:border-box; margin:0; padding:0; }
-    body, html { height:100%; font-family:'Poppins',sans-serif; }
-
-    /* SIDE NAV */
-    .sidenav {
-      height:100%; width:0; position:fixed; z-index:1001;
-      top:0; left:0; background:var(--dark-bg);
-      overflow-x:hidden; transition:0.3s; padding-top:70px;
-    }
-    .sidenav a {
-      padding:12px 32px; color:var(--text-light);
-      text-decoration:none; font-size:1.1rem; display:block;
-      transition:0.3s;
-    }
-    .sidenav a:hover { color:var(--primary-color); }
-    .sidenav .closebtn {
-      position:absolute; top:15px; right:25px;
-      font-size:2rem; color:var(--text-light); cursor:pointer;
-    }
-
-    /* HEADER */
     header {
-      position:fixed; top:0; left:0;
-      width:100%; height:70px; background:var(--dark-bg);
-      display:flex; align-items:center; justify-content:space-between;
-      padding:0 2rem; z-index:1000;
+      background-color: #121212;
+      color: #fff;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .header-left { display:flex; align-items:center; }
-    .burger { font-size:1.75rem; color:var(--text-light); cursor:pointer; }
-    .logo {
-      display:flex; align-items:center; margin-left:1.5rem;
-      color:var(--text-light); font-size:1.5rem; font-weight:600;
-      text-decoration:none;
+    .sidebar {
+      height: 100%;
+      width: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background-color: #333;
+      overflow-x: hidden;
+      transition: 0.3s;
+      padding-top: 60px;
+      z-index: 2;
     }
-    .logo img { height:40px; margin-right:1.5rem; }
-    a.logout {
-      font-size:1.25rem; color:var(--text-light); text-decoration:none;
+    .sidebar a {
+      padding: 1rem 1.5rem;
+      text-decoration: none;
+      font-size: 1rem;
+      color: #f1f1f1;
+      display: block;
+      transition: 0.3s;
     }
-    a.logout:hover { color:var(--primary-color); }
-
-    /* FORM */
-    .form-container {
-      padding-top:90px;
-      display:flex; justify-content:center; align-items:center;
-      height:calc(100vh - 90px); background:var(--light-bg);
+    .sidebar a:hover {
+      background-color: #575757;
     }
-    .settings-card {
-      background:#fff; padding:2rem; border-radius:8px;
-      box-shadow:0 4px 8px rgba(0,0,0,0.1);
-      width:90%; max-width:400px;
+    .menu-btn {
+      font-size: 2rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: #fff;
     }
-    .settings-card h2 {
-      margin-bottom:1rem; color:var(--text-dark); text-align:center;
+    .content {
+      padding: 2rem;
+      max-width: 500px;
+      margin: auto;
+      background-color: white;
+      margin-top: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    .settings-card input {
-      width:100%; padding:.75rem; margin-bottom:1rem;
-      border:1px solid #ccc; border-radius:4px; font-size:1rem;
+    .content h2 {
+      margin-bottom: 1rem;
     }
-    .settings-card button {
-      width:100%; padding:.75rem; border:none; border-radius:4px;
-      background:var(--primary-color); color:#fff;
-      cursor:pointer; transition:background .3s; font-size:1rem;
+    .content input {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
     }
-    .settings-card button:hover { background:#e65555; }
-    #response {
-      margin-top:.5rem; color:var(--primary-color); text-align:center;
+    .content button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
     }
-
-    /* CHAT WIDGET */
-    .chat-widget {
-      position:fixed; bottom:20px; right:20px;
-      width:60px; height:60px; background:var(--secondary-color);
-      border-radius:50%; display:flex; align-items:center; justify-content:center;
-      color:#fff; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.2);
-      z-index:1000; font-size:2.5rem;
+    .chatbot-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      z-index: 3;
     }
     .chat-window {
-      position:fixed; bottom:90px; right:20px;
-      width:360px; max-height:450px; background:#fff;
-      border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.2);
-      display:none; flex-direction:column; overflow:hidden; z-index:1000;
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 300px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 3;
     }
     .chat-header {
-      background:var(--secondary-color); color:#fff; padding:.75rem; font-weight:600;
+      background-color: #121212;
+      color: white;
+      padding: 0.5rem;
+      text-align: center;
     }
-    .chat-body { flex:1; padding:.5rem; overflow-y:auto; }
-    .chat-input { display:flex; border-top:1px solid #ddd; }
+    .chat-messages {
+      flex-grow: 1;
+      padding: 1rem;
+      height: 200px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+    }
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
     .chat-input input {
-      flex:1; border:none; padding:.75rem; font-size:1rem;
+      flex-grow: 1;
+      border: none;
+      padding: 0.75rem;
+      font-size: 1rem;
     }
-    .chat-input input:focus { outline:none; }
     .chat-input button {
-      border:none; background:var(--secondary-color);
-      color:#fff; padding:0 .75rem; cursor:pointer;
-      font-size:1rem; border-top-right-radius:4px; border-bottom-right-radius:4px;
+      background-color: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 0 1rem;
+      cursor: pointer;
     }
-    .chat-input button:hover { background:#0056b3; }
   </style>
 </head>
 <body>
-
-  <!-- SIDE NAV -->
-  <div id="mySidenav" class="sidenav">
-    <div class="closebtn" id="closeNav">&times;</div>
-    <a href="/account_settings">Account Settings</a>
-    <a href="/build_plan">Build Plan &amp; Nutrition</a>
-    <a href="/find_plan">Find Plans</a>
-    <a href="/coordinate_nutrition">Coordinate Nutrition</a>
-    <a href="/purchase">Purchase Programs</a>
-    <a href="/register_classes">Register Classes</a>
-    <a href="/email">Contact Gym Office</a>
-    <a href="/">Logout</a>
-  </div>
-
-  <!-- HEADER -->
   <header>
-    <div class="header-left">
-      <span class="burger" id="openNav">&#9776;</span>
-      <a href="/dashboard" class="logo">
-        <img src="/images/logo.png" alt="DailyFit Logo">DailyFit
-      </a>
-    </div>
-    <a class="logout" href="/"><i class="fas fa-sign-out-alt"></i></a>
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h1>Account Settings</h1>
+    <a class="logout" onclick="logout()" style="color:white;cursor:pointer;">Logout</a>
   </header>
 
-  <!-- FORM -->
-  <div class="form-container">
-    <div class="settings-card">
-      <h2>Account Settings</h2>
-      <form id="settingsForm">
-        <input type="text" id="name" placeholder="Full Name" />
-        <input type="text" id="address" placeholder="Address" />
-        <input type="text" id="phone" placeholder="Phone" />
-        <input type="password" id="password" placeholder="New Password" />
-        <input type="password" id="confirmPassword" placeholder="Confirm Password" />
-        <button type="submit">Save Changes</button>
-        <p id="response"></p>
-      </form>
-    </div>
+  <div id="mySidebar" class="sidebar">
+    <a href="/dashboard">Dashboard</a>
+    <a href="/plan_builder">Build Plan & Nutrition</a>
+    <a href="/plans">Find Plans</a>
+    <a href="/coordinate_nutrition">Coordinate Nutrition</a>
+    <a href="/purchase_programs">Purchase Programs</a>
+    <a href="/class_registration">Register Classes</a>
+    <a href="/contact_gym">Contact Gym Office</a>
+    <a href="#" onclick="logout()">Logout</a>
   </div>
 
-  <!-- LIVE CHAT -->
-  <div class="chat-widget" id="chatToggle">❓</div>
+  <div class="content">
+    <h2>Update Your Information</h2>
+    <form>
+      <input type="text" placeholder="Full Name" required />
+      <input type="email" placeholder="Email Address" required />
+      <input type="password" placeholder="New Password" />
+      <input type="password" placeholder="Retype New Password" />
+      <button type="submit">Update Account</button>
+    </form>
+  </div>
+
+  <button class="chatbot-button" onclick="toggleChat()">💬</button>
+
   <div class="chat-window" id="chatWindow">
-    <div class="chat-header">Personal Assistant</div>
-    <div class="chat-body" id="chatBody"></div>
+    <div class="chat-header">Ask DailyBot</div>
+    <div class="chat-messages" id="chatMessages">
+      <p><strong>Bot:</strong> Hello! Ask me anything about DailyFit.</p>
+    </div>
     <div class="chat-input">
-      <input type="text" id="chatInput" placeholder="Type a message..." />
-      <button id="chatSend"><i class="fas fa-paper-plane"></i> Send</button>
+      <input type="text" id="chatInput" placeholder="Type your question..." />
+      <button onclick="sendMessage()">Send</button>
     </div>
   </div>
 
   <script>
-    // Side-nav toggles
-    document.getElementById('openNav').onclick = () => {
-      document.getElementById('mySidenav').style.width = '250px';
-    };
-    document.getElementById('closeNav').onclick = () => {
-      document.getElementById('mySidenav').style.width = '0';
-    };
-
-    // Account settings form
-    document.getElementById('settingsForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const pwd = document.getElementById('password').value.trim();
-      const cp  = document.getElementById('confirmPassword').value.trim();
-      if (pwd !== cp) {
-        return document.getElementById('response').innerText = 'Passwords do not match.';
-      }
-      const token = localStorage.getItem('token');
-      const res = await fetch('/account', {
-        method: 'PUT',
-        headers: {
-          'Content-Type':'application/json',
-          'Authorization':'Bearer ' + token
-        },
-        body: JSON.stringify({
-          name: document.getElementById('name').value,
-          address: document.getElementById('address').value,
-          phone: document.getElementById('phone').value,
-          password: pwd
-        })
-      });
-      const data = await res.json();
-      document.getElementById('response').innerText =
-        res.ok ? data.message : 'Error: ' + data.detail;
-    });
-
-    // Chat logic
-    const chatToggle = document.getElementById('chatToggle'),
-          chatWindow = document.getElementById('chatWindow'),
-          chatInput  = document.getElementById('chatInput'),
-          chatBody   = document.getElementById('chatBody');
-    let chatInitialized = false;
-
-    chatToggle.onclick = () => {
-      const open = chatWindow.style.display === 'flex';
-      chatWindow.style.display = open ? 'none' : 'flex';
-      if (!open && !chatInitialized) {
-        chatInitialized = true;
-        const p = document.createElement('p');
-        p.innerText = `🤖 Hello! I’m your Personal Assistant.
-Here’s what I can help you with:
-• View gym hours
-• Build a training plan
-• Get a nutrition menu
-• Browse classes
-• Learn about facilities
-• Ask about personal training
-• Find our location
-• Sign up for a free trial
-• Cancel or pause membership
-• Leave us a message
-
-Just type any of these to get started!`;
-        chatBody.appendChild(p);
-        chatBody.scrollTop = chatBody.scrollHeight;
-      }
-    };
-
-    async function sendMessage() {
-      const msg = chatInput.value.trim();
-      if (!msg) return;
-      const pUser = document.createElement('p');
-      pUser.innerText = 'You: ' + msg;
-      chatBody.appendChild(pUser);
-      chatInput.value = '';
-      try {
-        const res = await fetch('/api/chat', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ message: msg })
-        });
-        const { reply } = await res.json();
-        const pBot = document.createElement('p');
-        pBot.innerText = '🤖 ' + reply;
-        chatBody.appendChild(pBot);
-      } catch {
-        const pErr = document.createElement('p');
-        pErr.innerText = '🤖 Sorry, I’m having trouble right now.';
-        chatBody.appendChild(pErr);
-      }
-      chatBody.scrollTop = chatBody.scrollHeight;
+    function toggleSidebar() {
+      const sb = document.getElementById("mySidebar");
+      sb.style.width = sb.style.width === "250px" ? "0" : "250px";
     }
 
-    document.getElementById('chatSend').onclick = sendMessage;
-    chatInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
+    function toggleChat() {
+      const cw = document.getElementById("chatWindow");
+      cw.style.display = (cw.style.display === "flex") ? "none" : "flex";
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("chatInput");
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      const chatBox = document.getElementById("chatMessages");
+      const userMsg = document.createElement("p");
+      userMsg.innerHTML = `<strong>You:</strong> ${msg}`;
+      chatBox.appendChild(userMsg);
+      input.value = "";
+
+      fetch("/api/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: msg})
+      })
+      .then(res => res.json())
+      .then(data => {
+        const botReply = document.createElement("p");
+        botReply.innerHTML = `<strong>Bot:</strong> ${data.reply}`;
+        chatBox.appendChild(botReply);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "/login";
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('token');
+      if (!token) window.location.href = '/login';
     });
   </script>
 </body>
 </html>
+<script>
+  // Existing functions...
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setTimeout(() => window.location.href = '/login', 0);
+    }
+  });
+</script>

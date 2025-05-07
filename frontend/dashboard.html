@@ -1,216 +1,96 @@
+<!-- frontend/dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DailyFit — Dashboard</title>
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
-  <!-- FontAwesome for icons -->
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
+  <title>DailyFit Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --primary-color: #ff6b6b;
-      --secondary-color: #1e90ff;
-      --dark-bg: #121212;
-      --light-bg: #f4f4f4;
-      --text-light: #f9f9f9;
-    }
-    * { box-sizing:border-box; margin:0; padding:0; }
-    body, html { height:100%; font-family:'Poppins',sans-serif; }
-
-    /* SIDE NAV */
-    .sidenav {
-      height:100%; width:0; position:fixed; z-index:1001;
-      top:0; left:0; background:var(--dark-bg);
-      overflow-x:hidden; transition:0.3s; padding-top:70px;
-    }
-    .sidenav a {
-      padding:12px 32px; color:var(--text-light);
-      text-decoration:none; font-size:1.1rem; display:block;
-      transition:0.3s;
-    }
-    .sidenav a:hover { color:var(--primary-color); }
-    .sidenav .closebtn {
-      position:absolute; top:15px; right:25px;
-      font-size:2rem; color:var(--text-light); cursor:pointer;
-    }
-
-    /* HEADER */
-    header {
-      position:fixed; top:0; left:0;
-      width:100%; height:70px; background:var(--dark-bg);
-      display:flex; align-items:center; justify-content:space-between;
-      padding:0 2rem; z-index:1000;
-    }
-    .header-left { display:flex; align-items:center; }
-    .burger {
-      font-size:1.75rem; color:var(--text-light); cursor:pointer;
-    }
-    .logo {
-      display:flex; align-items:center; margin-left:1.5rem;
-      color:var(--text-light); font-size:1.5rem; font-weight:600;
-      text-decoration:none;
-    }
-    .logo img { height:40px; margin-right:1.5rem; }
-    a.logout {
-      font-size:1.25rem; color:var(--text-light);
-      text-decoration:none;
-    }
-    a.logout:hover { color:var(--primary-color); }
-
-    /* MAIN CONTENT */
-    .content {
-      padding-top:90px;
-      background:var(--light-bg);
-      min-height:calc(100vh - 90px);
-    }
-
-    /* CHAT WIDGET */
-    .chat-widget {
-      position:fixed; bottom:20px; right:20px;
-      width:60px; height:60px; background:var(--secondary-color);
-      border-radius:50%; display:flex; align-items:center; justify-content:center;
-      color:#fff; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.2);
-      z-index:1000; font-size:2.5rem;
-    }
-    .chat-window {
-      position:fixed; bottom:90px; right:20px;
-      width:360px; max-height:450px; background:#fff;
-      border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.2);
-      display:none; flex-direction:column; overflow:hidden; z-index:1000;
-    }
-    .chat-header {
-      background:var(--secondary-color); color:#fff; padding:.75rem; font-weight:600;
-    }
-    .chat-body { flex:1; padding:.5rem; overflow-y:auto; }
-    .chat-input { display:flex; border-top:1px solid #ddd; }
-    .chat-input input {
-      flex:1; border:none; padding:.75rem; font-size:1rem;
-    }
-    .chat-input input:focus { outline:none; }
-    .chat-input button {
-      border:none; background:var(--secondary-color);
-      color:#fff; padding:0 .75rem; cursor:pointer;
-      font-size:1rem; border-top-right-radius:4px; border-bottom-right-radius:4px;
-    }
-    .chat-input button:hover { background:#0056b3; }
+    body { font-family: 'Poppins', sans-serif; margin:0; padding:0; background:#f5f5f5; }
+    header { background:#121212; color:#fff; padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; }
+    .sidebar { height:100%; width:0; position:fixed; top:0; left:0; background:#333; overflow-x:hidden; transition:0.3s; padding-top:60px; z-index:2; }
+    .sidebar a { padding:1rem 1.5rem; text-decoration:none; font-size:1rem; color:#f1f1f1; display:block; transition:0.3s; }
+    .sidebar a:hover { background:#575757; }
+    .menu-btn { font-size:2rem; cursor:pointer; background:none; border:none; color:#fff; }
+    .content { padding:2rem; }
+    .chatbot-button { position:fixed; bottom:20px; right:20px; background:#ff6b6b; color:#fff; border:none; border-radius:50%; width:60px; height:60px; font-size:1.5rem; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.3); z-index:3; }
+    .chat-window { position:fixed; bottom:90px; right:20px; width:300px; background:#fff; border:1px solid #ccc; border-radius:10px; box-shadow:0 4px 8px rgba(0,0,0,0.2); display:none; flex-direction:column; overflow:hidden; z-index:3; }
+    .chat-header { background:#121212; color:#fff; padding:0.5rem; text-align:center; }
+    .chat-messages { flex-grow:1; padding:1rem; height:200px; overflow-y:auto; font-size:0.9rem; }
+    .chat-input { display:flex; border-top:1px solid #ccc; }
+    .chat-input input { flex-grow:1; border:none; padding:0.75rem; font-size:1rem; }
+    .chat-input button { background:#ff6b6b; color:#fff; border:none; padding:0 1rem; cursor:pointer; }
   </style>
 </head>
 <body>
-
-  <!-- SIDE NAV -->
-  <div id="mySidenav" class="sidenav">
-    <div class="closebtn" id="closeNav">&times;</div>
-    <a href="/account_settings">Account Settings</a>
-    <a href="/build_plan">Build Plan &amp; Nutrition</a>
-    <a href="/find_plan">Find Plans</a>
-    <a href="/coordinate_nutrition">Coordinate Nutrition</a>
-    <a href="/purchase">Purchase Programs</a>
-    <a href="/register_classes">Register Classes</a>
-    <a href="/email">Contact Gym Office</a>
-    <a href="/">Logout</a>
-  </div>
-
-  <!-- HEADER -->
   <header>
-    <div class="header-left">
-      <span class="burger" id="openNav">&#9776;</span>
-      <a href="/dashboard" class="logo">
-        <img src="/images/logo.png" alt="DailyFit Logo">DailyFit
-      </a>
-    </div>
-    <a class="logout" href="/"><i class="fas fa-sign-out-alt"></i></a>
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h1>DailyFit Dashboard</h1>
+    <a href="/logout" style="color:white;text-decoration:none;">Logout</a>
   </header>
 
-  <!-- MAIN CONTENT -->
-  <div class="content">
-    <!-- Your dashboard content goes here -->
+  <div id="mySidebar" class="sidebar">
+    <a href="/account_settings">Account Settings</a>
+    <a href="/plan_builder">Build Plan & Nutrition</a>
+    <a href="/plans">Find Plans</a>
+    <a href="/coordinate_nutrition">Coordinate Nutrition</a>
+    <a href="/purchase_programs">Purchase Programs</a>
+    <a href="/class_registration">Register Classes</a>
+    <a href="/contact_gym">Contact Gym Office</a>
+    <a href="/logout">Logout</a>
   </div>
 
-  <!-- CHAT WIDGET -->
-  <div class="chat-widget" id="chatToggle">❓</div>
+  <div class="content">
+    <h2>Welcome to your dashboard.</h2>
+    <p>Here you can manage your fitness plan, track progress, and interact with your coach.</p>
+  </div>
+
+  <button class="chatbot-button" onclick="toggleChat()">💬</button>
+
   <div class="chat-window" id="chatWindow">
-    <div class="chat-header">Personal Assistant</div>
-    <div class="chat-body" id="chatBody"></div>
+    <div class="chat-header">Ask DailyBot</div>
+    <div class="chat-messages" id="chatMessages">
+      <p><strong>Bot:</strong> Hello! Ask me anything about DailyFit.</p>
+    </div>
     <div class="chat-input">
-      <input type="text" id="chatInput" placeholder="Type a message..." />
-      <button id="chatSend"><i class="fas fa-paper-plane"></i> Send</button>
+      <input type="text" id="chatInput" placeholder="Type your question..." />
+      <button onclick="sendMessage()">Send</button>
     </div>
   </div>
 
   <script>
-    // Side-nav toggles
-    document.getElementById('openNav').onclick = () => {
-      document.getElementById('mySidenav').style.width = '250px';
-    };
-    document.getElementById('closeNav').onclick = () => {
-      document.getElementById('mySidenav').style.width = '0';
-    };
-
-    // Chat logic
-    const chatToggle = document.getElementById('chatToggle'),
-          chatWindow = document.getElementById('chatWindow'),
-          chatInput  = document.getElementById('chatInput'),
-          chatBody   = document.getElementById('chatBody');
-    let chatInitialized = false;
-
-    chatToggle.onclick = () => {
-      const open = chatWindow.style.display === 'flex';
-      chatWindow.style.display = open ? 'none' : 'flex';
-      if (!open && !chatInitialized) {
-        chatInitialized = true;
-        const p = document.createElement('p');
-        p.innerText = `🤖 Hello! I’m your Personal Assistant.
-Here’s what I can help you with:
-• View gym hours
-• Build a training plan
-• Get a nutrition menu
-• Browse classes
-• Learn about facilities
-• Ask about personal training
-• Find our location
-• Sign up for a free trial
-• Cancel or pause membership
-• Leave us a message
-
-Just type any of these to get started!`;
-        chatBody.appendChild(p);
-        chatBody.scrollTop = chatBody.scrollHeight;
-      }
-    };
-
-    async function sendMessage() {
-      const msg = chatInput.value.trim();
-      if (!msg) return;
-      const pUser = document.createElement('p');
-      pUser.innerText = 'You: ' + msg;
-      chatBody.appendChild(pUser);
-      chatInput.value = '';
-      try {
-        const res = await fetch('/api/chat', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ message: msg })
-        });
-        const { reply } = await res.json();
-        const pBot = document.createElement('p');
-        pBot.innerText = '🤖 ' + reply;
-        chatBody.appendChild(pBot);
-      } catch {
-        const pErr = document.createElement('p');
-        pErr.innerText = '🤖 Sorry, I’m having trouble right now.';
-        chatBody.appendChild(pErr);
-      }
-      chatBody.scrollTop = chatBody.scrollHeight;
+    function toggleSidebar() {
+      const sb = document.getElementById("mySidebar");
+      sb.style.width = sb.style.width === "250px" ? "0" : "250px";
     }
-
-    document.getElementById('chatSend').onclick = sendMessage;
-    chatInput.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); sendMessage(); }
-    });
+    function toggleChat() {
+      const cw = document.getElementById("chatWindow");
+      cw.style.display = (cw.style.display === "flex") ? "none" : "flex";
+    }
+    function sendMessage() {
+      const input = document.getElementById("chatInput");
+      const msg   = input.value.trim();
+      if (!msg) return;
+      const box   = document.getElementById("chatMessages");
+      const you   = document.createElement("p");
+      you.innerHTML = `<strong>You:</strong> ${msg}`;
+      box.appendChild(you);
+      input.value = "";
+      fetch("/api/chat", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        credentials: "include",
+        body: JSON.stringify({message: msg})
+      })
+      .then(r => r.json())
+      .then(d => {
+        const bot = document.createElement("p");
+        bot.innerHTML = `<strong>Bot:</strong> ${d.reply}`;
+        box.appendChild(bot);
+        box.scrollTop = box.scrollHeight;
+      });
+    }
   </script>
 </body>
 </html>

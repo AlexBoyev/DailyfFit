@@ -1,53 +1,130 @@
+# backend/main.py
 import os
+import requests
+from pathlib import Path
+
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from chatbot import get_bot_response
+from fastapi.templating import Jinja2Templates
+from jose import jwt, JWTError
+from dotenv import load_dotenv
+from services import UserService
 
+# ─── Load .env ───────────────────────────────────────────────────────────────
+load_dotenv()
+SECRET_KEY           = os.getenv("SECRET_KEY")
+ALGORITHM            = os.getenv("ALGORITHM", "HS256")
+RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
+SITE_KEY             = os.getenv("SITE_KEY")
+CAPTCHA_ENABLED      = os.getenv("CAPTCHA_ENABLED", "true").lower() == "true"
+
+# ─── Paths ────────────────────────────────────────────────────────────────────
+BASE_DIR     = Path(__file__).resolve().parent.parent
+FRONTEND_DIR = BASE_DIR / "frontend"
+IMAGE_DIR    = FRONTEND_DIR / "images"
+
+# ─── App setup ────────────────────────────────────────────────────────────────
 app = FastAPI()
-
-# Run migrations on startup
-
-# Paths
-BASE_DIR     = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "frontend"))
 
 # Serve images at /images
 app.mount("/images", StaticFiles(directory=os.path.join(FRONTEND_DIR, "images")), name="images")
 # Serve all other static HTML/CSS/JS in frontend
-app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+templates = Jinja2Templates(directory=str(FRONTEND_DIR))
 
-def _serve(file_name: str):
-    path = os.path.join(FRONTEND_DIR, file_name)
-    return HTMLResponse(open(path, "r", encoding="utf-8").read())
 
+# ─── Middleware ───────────────────────────────────────────────────────────────
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    protected = ("/dashboard", "/purchase_program")
+    if request.url.path in protected:
+        token = request.cookies.get("token")
+        if not token:
+            return RedirectResponse("/login", status_code=302)
+        try:
+            jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        except JWTError:
+            resp = RedirectResponse("/login", status_code=302)
+            resp.delete_cookie("token", path="/")
+            return resp
+    return await call_next(request)
+
+
+# ─── Helpers ─────────────────────────────────────────────────────────────────
+def verify_recaptcha(token: str) -> bool:
+    if not CAPTCHA_ENABLED:
+        return True
+    try:
+        r = requests.post(
+            "https://www.google.com/recaptcha/api/siteverify",
+            data={"secret": RECAPTCHA_SECRET_KEY, "response": token},
+            timeout=5
+        )
+        return r.json().get("success", False)
+    except:
+        return False
+
+
+# ─── Public routes ───────────────────────────────────────────────────────────
 @app.get("/", response_class=HTMLResponse)
-async def index():
-    return _serve("index.html")
+def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
-@app.get("/register", response_class=HTMLResponse)
-async def register():
-    return _serve("register.html")
 
 @app.get("/login", response_class=HTMLResponse)
-async def login():
-    return _serve("login.html")
+def login_get(request: Request):
+    return templates.TemplateResponse(
+        "login.html",
+        {"request": request, "site_key": SITE_KEY, "captcha_enabled": CAPTCHA_ENABLED}
+    )
 
-@app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard():
-    return _serve("dashboard.html")
 
-@app.get("/account_settings", response_class=HTMLResponse)
-async def account_settings():
-    return _serve("account_settings.html")
-
-@app.post("/api/chat")
-async def chat(request: Request):
+@app.post("/login")
+async def login_post(request: Request):
     data = await request.json()
-    msg  = data.get("message", "")
-    reply = get_bot_response(msg)
-    return {"reply": reply}
+    if not verify_recaptcha(data.get("g-recaptcha-response", "")):
+        return JSONResponse(status_code=403, content={"detail": "CAPTCHA failed"})
+    result = UserService().login(data["email"], data["password"])
+    if "token" in result:
+        resp = JSONResponse(content=result)
+        resp.set_cookie(
+            "token", result["token"],
+            httponly=True, samesite="Lax", secure=False, path="/"
+        )
+        return resp
+    return JSONResponse(status_code=401, content=result)
 
+
+@app.get("/logout")
+def logout(request: Request):
+    resp = RedirectResponse("/login", status_code=302)
+    resp.delete_cookie("token", path="/")
+    return resp
+
+
+@app.get("/register", response_class=HTMLResponse)
+def register(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+
+@app.get("/about", response_class=HTMLResponse)
+def about(request: Request):
+    return templates.TemplateResponse("about.html", {"request": request})
+
+
+# ─── Protected routes ─────────────────────────────────────────────────────────
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard(request: Request):
+    # if you reach here, middleware already validated token
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+
+
+@app.get("/purchase_program", response_class=HTMLResponse)
+def purchase_program(request: Request):
+    return templates.TemplateResponse("purchase_program.html", {"request": request})
+
+
+# ─── Run server ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.main:app", host="127.0.0.1", port=8001, reload=True)

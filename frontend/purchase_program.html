@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Purchase Program — DailyFit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary-color: #ff6b6b;
+      --dark-bg: #121212;
+      --text-light: #f9f9f9;
+      --box-bg: rgba(255,255,255,0.1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html {
+      font-family: 'Poppins', sans-serif;
+      background: url('/static/images/gym1.jpg') center/cover no-repeat fixed;
+      color: var(--text-light);
+      min-height: 100vh;
+    }
+    header {
+      background: var(--dark-bg);
+      height: 70px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 2rem;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      color: var(--text-light);
+    }
+    .logo img {
+      height: 40px;
+      margin-right: 0.5rem;
+    }
+    nav a {
+      margin-left: 1.5rem;
+      color: var(--text-light);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    nav a:hover {
+      color: var(--primary-color);
+    }
+    .container {
+      padding: 90px 2rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+    .card {
+      background: var(--box-bg);
+      backdrop-filter: blur(8px);
+      border-radius: 10px;
+      padding: 1.2rem 1rem;
+      width: 220px;
+      color: var(--text-light);
+      border: 2px solid var(--primary-color);
+      transition: transform 0.2s ease;
+    }
+    .card:hover {
+      transform: scale(1.05);
+    }
+    .card h2 {
+      color: #ffd700;
+      margin-bottom: 0.5rem;
+      font-size: 1.3rem;
+      text-align: center;
+    }
+    .card p {
+      font-size: 0.9rem;
+      line-height: 1.4;
+      margin: 0.4rem 0;
+    }
+    .price {
+      font-size: 1.1rem;
+      color: #00ffcc;
+      margin-top: 0.8rem;
+      text-align: center;
+      font-weight: bold;
+    }
+    .note {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #ccc;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">
+      <img src="/static/images/logo.png" alt="DailyFit Logo">
+      <span>DailyFit</span>
+    </a>
+    <nav>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/logout">Logout</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <h2>Bronze Plan</h2>
+      <p>✔ Access during off-peak hours</p>
+      <p>✔ Basic cardio & weights</p>
+      <p>✔ Community support</p>
+      <div class="price">$29 / month</div>
+    </div>
+
+    <div class="card">
+      <h2>Silver Plan</h2>
+      <p>Includes Bronze benefits:</p>
+      <p>✔ 24/7 gym access</p>
+      <p>✔ All gym equipment</p>
+      <p>✔ Monthly fitness check</p>
+      <div class="price">$49 / month</div>
+    </div>
+
+    <div class="card">
+      <h2>Gold Plan</h2>
+      <p>Includes Silver + Bronze:</p>
+      <p>✔ 2 personal trainer sessions</p>
+      <p>✔ Access to yoga & pilates</p>
+      <p>✔ Group class booking</p>
+      <div class="price">$79 / month</div>
+    </div>
+
+    <div class="card">
+      <h2>Platinum Plan</h2>
+      <p>Includes Gold + all below:</p>
+      <p>✔ Unlimited trainer sessions</p>
+      <p>✔ Nutrition planning</p>
+      <p>✔ VIP sauna & spa access</p>
+      <div class="price">$119 / month</div>
+    </div>
+  </main>
+
+  <p class="note">All plans are billed monthly. You can upgrade anytime.</p>
+</body>
+</html>
