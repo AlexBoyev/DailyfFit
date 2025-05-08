@@ -1,145 +1,249 @@
+<!-- frontend/purchase_program.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Purchase Program — DailyFit</title>
+  <title>Purchase Programs — DailyFit</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --primary-color: #ff6b6b;
+      --primary: #ff6b6b;
       --dark-bg: #121212;
       --text-light: #f9f9f9;
-      --box-bg: rgba(255,255,255,0.1);
+      --card-bg: rgba(255,255,255,0.9);
+      --card-shadow: rgba(0,0,0,0.15);
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html {
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
       font-family: 'Poppins', sans-serif;
-      background: url('/static/images/gym1.jpg') center/cover no-repeat fixed;
-      color: var(--text-light);
+      background: url('/images/gym1.jpg') center/cover no-repeat fixed;
+      color: #333;
       min-height: 100vh;
     }
     header {
+      position: fixed;
+      top: 0; left: 0; width: 100%;
       background: var(--dark-bg);
-      height: 70px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 2rem;
-    }
-    .logo {
-      display: flex;
-      align-items: center;
       color: var(--text-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      z-index: 10;
     }
-    .logo img {
-      height: 40px;
-      margin-right: 0.5rem;
+    .menu-btn {
+      font-size: 1.5rem;
+      background: none;
+      border: none;
+      color: var(--text-light);
+      cursor: pointer;
+      margin-right: 1rem;
     }
-    nav a {
-      margin-left: 1.5rem;
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-light);
+      flex-grow: 1;
+      text-align: center;
+    }
+    .logout-link {
       color: var(--text-light);
       text-decoration: none;
-      font-weight: 500;
+      font-size: 1rem;
     }
-    nav a:hover {
-      color: var(--primary-color);
+    .logout-link:hover {
+      text-decoration: underline;
     }
-    .container {
-      padding: 90px 2rem 2rem;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 0; height: 100%;
+      background: #333;
+      overflow-x: hidden;
+      transition: 0.3s;
+      padding-top: 70px;
+      z-index: 9;
+    }
+    .sidebar a {
+      display: block;
+      padding: 1rem 1.5rem;
+      color: #f1f1f1;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+    .sidebar a:hover { background: #575757; }
+    .content {
+      margin-top: 70px;
+      padding: 2rem;
+    }
+    .content h1 {
+      margin-bottom: 1.5rem;
+      color: var(--text-light);
+      text-align: center;
+    }
+    .plans {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 1.5rem;
+      align-items: stretch;
     }
     .card {
-      background: var(--box-bg);
-      backdrop-filter: blur(8px);
+      background: var(--card-bg);
       border-radius: 10px;
-      padding: 1.2rem 1rem;
-      width: 220px;
-      color: var(--text-light);
-      border: 2px solid var(--primary-color);
-      transition: transform 0.2s ease;
-    }
-    .card:hover {
-      transform: scale(1.05);
+      box-shadow: 0 4px 12px var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 1.5rem;
     }
     .card h2 {
-      color: #ffd700;
-      margin-bottom: 0.5rem;
-      font-size: 1.3rem;
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      color: #222;
       text-align: center;
     }
-    .card p {
-      font-size: 0.9rem;
-      line-height: 1.4;
-      margin: 0.4rem 0;
+    .card ul {
+      list-style: none;
+      padding-left: 1rem;
+      margin-bottom: 1rem;
+    }
+    .card ul li {
+      position: relative;
+      margin-bottom: 0.5rem;
+      padding-left: 1.2rem;
+      color: #444;
+    }
+    .card ul li::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0.4em;
+      width: 0.5em; height: 0.5em;
+      background: var(--primary);
+      border-radius: 50%;
     }
     .price {
-      font-size: 1.1rem;
-      color: #00ffcc;
-      margin-top: 0.8rem;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--primary);
       text-align: center;
-      font-weight: bold;
     }
-    .note {
-      text-align: center;
-      font-size: 0.85rem;
-      color: #ccc;
-      margin-top: 10px;
+    .btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.75rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+    }
+    .btn:hover {
+      background: #e85a5a;
     }
   </style>
 </head>
 <body>
+
   <header>
-    <a href="/" class="logo">
-      <img src="/static/images/logo.png" alt="DailyFit Logo">
-      <span>DailyFit</span>
-    </a>
-    <nav>
-      <a href="/dashboard">Dashboard</a>
-      <a href="/logout">Logout</a>
-    </nav>
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h1>Purchase Programs</h1>
+    <a href="/logout" class="logout-link">Logout</a>
   </header>
 
-  <main class="container">
-    <div class="card">
-      <h2>Bronze Plan</h2>
-      <p>✔ Access during off-peak hours</p>
-      <p>✔ Basic cardio & weights</p>
-      <p>✔ Community support</p>
-      <div class="price">$29 / month</div>
-    </div>
+  <div id="sidebar" class="sidebar">
+    <a href="/dashboard">Dashboard</a>
+    <a href="/account_settings">Account Settings</a>
+    <a href="/plan_builder">Build Plan & Nutrition</a>
+    <a href="/plans">Find Plans</a>
+    <a href="/coordinate_nutrition">Coordinate Nutrition</a>
+    <a href="/purchase_program">Purchase Programs</a>
+    <a href="/class_registration">Register Classes</a>
+    <a href="/contact_gym">Contact Gym Office</a>
+    <a href="/logout">Logout</a>
+  </div>
 
-    <div class="card">
-      <h2>Silver Plan</h2>
-      <p>Includes Bronze benefits:</p>
-      <p>✔ 24/7 gym access</p>
-      <p>✔ All gym equipment</p>
-      <p>✔ Monthly fitness check</p>
-      <div class="price">$49 / month</div>
+  <div class="content">
+    <h1>Choose Your Plan</h1>
+    <div class="plans">
+      <div class="card">
+        <div>
+          <h2>Bronze Plan</h2>
+          <ul>
+            <li>3 sessions / month</li>
+            <li>Basic workout plan</li>
+          </ul>
+        </div>
+        <div>
+          <div class="price">$29<span style="font-size:0.8rem;">/mo</span></div>
+          <button class="btn">Purchase</button>
+        </div>
+      </div>
+      <div class="card">
+        <div>
+          <h2>Silver Plan</h2>
+          <ul>
+            <li>Includes Bronze</li>
+            <li>Nutrition tips</li>
+            <li>Unlimited chat support</li>
+          </ul>
+        </div>
+        <div>
+          <div class="price">$49<span style="font-size:0.8rem;">/mo</span></div>
+          <button class="btn">Purchase</button>
+        </div>
+      </div>
+      <div class="card">
+        <div>
+          <h2>Gold Plan</h2>
+          <ul>
+            <li>Includes Silver</li>
+            <li>1 personal session / week</li>
+            <li>Custom meal plan</li>
+          </ul>
+        </div>
+        <div>
+          <div class="price">$79<span style="font-size:0.8rem;">/mo</span></div>
+          <button class="btn">Purchase</button>
+        </div>
+      </div>
+      <div class="card">
+        <div>
+          <h2>Platinum Plan</h2>
+          <ul>
+            <li>Includes Gold</li>
+            <li>Unlimited trainer sessions</li>
+            <li>VIP sauna & spa access</li>
+          </ul>
+        </div>
+        <div>
+          <div class="price">$119<span style="font-size:0.8rem;">/mo</span></div>
+          <button class="btn">Purchase</button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <div class="card">
-      <h2>Gold Plan</h2>
-      <p>Includes Silver + Bronze:</p>
-      <p>✔ 2 personal trainer sessions</p>
-      <p>✔ Access to yoga & pilates</p>
-      <p>✔ Group class booking</p>
-      <div class="price">$79 / month</div>
-    </div>
+  <script>
+    function toggleSidebar() {
+      const sb = document.getElementById('sidebar');
+      sb.style.width = sb.style.width === '250px' ? '0' : '250px';
+    }
+    document.addEventListener('click', e => {
+      const sb = document.getElementById('sidebar');
+      const btn = document.querySelector('.menu-btn');
+      if (
+        sb.style.width === '250px' &&
+        !sb.contains(e.target) &&
+        !btn.contains(e.target)
+      ) {
+        sb.style.width = '0';
+      }
+    });
+  </script>
 
-    <div class="card">
-      <h2>Platinum Plan</h2>
-      <p>Includes Gold + all below:</p>
-      <p>✔ Unlimited trainer sessions</p>
-      <p>✔ Nutrition planning</p>
-      <p>✔ VIP sauna & spa access</p>
-      <div class="price">$119 / month</div>
-    </div>
-  </main>
-
-  <p class="note">All plans are billed monthly. You can upgrade anytime.</p>
 </body>
 </html>
