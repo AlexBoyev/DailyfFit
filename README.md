@@ -60,7 +60,13 @@ DailyFit follows a modern three-tier architecture:
    docker-compose up -d
    ```
 
-3. Access the application:
+3. Configure database:
+   ```
+   cd mysql
+   docker exec -i dailyfit-mysql mysql --host=localhost --user=root --password=yourpassword dailyfit < ./sql/schema.sql
+   ```
+
+4. Access the application:
    ```
    Frontend: http://localhost:8001
    API Documentation: http://localhost:8001/docs
