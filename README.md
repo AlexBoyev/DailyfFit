@@ -62,8 +62,7 @@ DailyFit follows a modern three-tier architecture:
 
 3. Configure database:
    ```
-  docker exec -i dailyfit-mysql mysql -h localhost -u root -pyourpassword dailyfit < ./sql/schema.sql
-
+   docker exec -i dailyfit-mysql mysql -h localhost -u root -pyourpassword dailyfit < ./sql/schema.sql
    ```
 
 4. Access the application:
