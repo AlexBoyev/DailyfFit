@@ -1,15 +1,17 @@
 # backend/main.py
+
 import os
 import requests
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from jose import jwt, JWTError
 from dotenv import load_dotenv
-from services import UserService
+
+from services import UserService  # uses register_user and login()
 
 # ─── Load .env ───────────────────────────────────────────────────────────────
 load_dotenv()
@@ -20,20 +22,19 @@ SITE_KEY             = os.getenv("SITE_KEY")
 CAPTCHA_ENABLED      = os.getenv("CAPTCHA_ENABLED", "true").lower() == "true"
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
-BASE_DIR     = Path(__file__).resolve().parent.parent
-FRONTEND_DIR = BASE_DIR / "frontend"
-IMAGE_DIR    = FRONTEND_DIR / "images"
+BASE_DIR     = Path(__file__).resolve().parent
+FRONTEND_DIR = BASE_DIR.parent / "frontend"
 
 # ─── App setup ────────────────────────────────────────────────────────────────
-app = FastAPI()
+app = FastAPI(debug=True)
 
 # Serve images at /images
-app.mount("/images", StaticFiles(directory=os.path.join(FRONTEND_DIR, "images")), name="images")
-# Serve all other static HTML/CSS/JS in frontend
+app.mount("/images", StaticFiles(directory=str(FRONTEND_DIR / "images")), name="images")
+# Jinja2 templates for HTML
 templates = Jinja2Templates(directory=str(FRONTEND_DIR))
 
 
-# ─── Middleware ───────────────────────────────────────────────────────────────
+# ─── Auth middleware ─────────────────────────────────────────────────────────
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
     protected = ("/dashboard", "/purchase_program")
@@ -50,7 +51,7 @@ async def auth_middleware(request: Request, call_next):
     return await call_next(request)
 
 
-# ─── Helpers ─────────────────────────────────────────────────────────────────
+# ─── reCAPTCHA verification ──────────────────────────────────────────────────
 def verify_recaptcha(token: str) -> bool:
     if not CAPTCHA_ENABLED:
         return True
@@ -84,15 +85,14 @@ async def login_post(request: Request):
     data = await request.json()
     if not verify_recaptcha(data.get("g-recaptcha-response", "")):
         return JSONResponse(status_code=403, content={"detail": "CAPTCHA failed"})
+    # UserService.login raises HTTPException on invalid credentials
     result = UserService().login(data["email"], data["password"])
-    if "token" in result:
-        resp = JSONResponse(content=result)
-        resp.set_cookie(
-            "token", result["token"],
-            httponly=True, samesite="Lax", secure=False, path="/"
-        )
-        return resp
-    return JSONResponse(status_code=401, content=result)
+    resp = JSONResponse(content=result)
+    resp.set_cookie(
+        "token", result["token"],
+        httponly=True, samesite="Lax", secure=False, path="/"
+    )
+    return resp
 
 
 @app.get("/logout")
@@ -103,8 +103,16 @@ def logout(request: Request):
 
 
 @app.get("/register", response_class=HTMLResponse)
-def register(request: Request):
+def register_get(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
+
+
+@app.post("/register", status_code=status.HTTP_201_CREATED)
+async def register_post(request: Request):
+    data = await request.json()
+    # Delegate to your service; register_user will raise HTTPException on duplicate
+    result = UserService().register_user(data)
+    return result  # e.g. {"message": "Registered successfully"}
 
 
 @app.get("/about", response_class=HTMLResponse)
@@ -115,7 +123,6 @@ def about(request: Request):
 # ─── Protected routes ─────────────────────────────────────────────────────────
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
-    # if you reach here, middleware already validated token
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
 
@@ -124,7 +131,6 @@ def purchase_program(request: Request):
     return templates.TemplateResponse("purchase_program.html", {"request": request})
 
 
-# ─── Run server ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.main:app", host="127.0.0.1", port=8001, reload=True)
