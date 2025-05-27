@@ -8,7 +8,12 @@ CREATE TABLE IF NOT EXISTS Users (
     role             ENUM('user','admin'),
     address          VARCHAR(255),
     phone            VARCHAR(50),
-    plan             VARCHAR(50) DEFAULT 'Free plan'
+    profile_picture  VARCHAR(255),
+    height_cm        INT,
+    weight_kg        INT,
+    age              INT,
+    gender           ENUM('male', 'female', 'other'),
+    membership_plan  VARCHAR(100) DEFAULT 'Free membership'
 );
 
 CREATE TABLE IF NOT EXISTS TrainingPlans (

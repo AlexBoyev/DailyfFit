@@ -1,11 +1,10 @@
-<!-- frontend/purchase_program.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Purchase Programs — DailyFit</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #ff6b6b;
@@ -22,23 +21,10 @@
       min-height: 100vh;
     }
     header {
-      position: fixed;
-      top: 0; left: 0; width: 100%;
-      background: var(--dark-bg);
-      color: var(--text-light);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem 1.5rem;
-      z-index: 10;
-    }
-    .menu-btn {
-      font-size: 1.5rem;
-      background: none;
-      border: none;
-      color: var(--text-light);
-      cursor: pointer;
-      margin-right: 1rem;
+      position: fixed; top: 0; left: 0; width: 100%;
+      background: var(--dark-bg); color: var(--text-light);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.5rem; z-index: 10;
     }
     header h1 {
       font-size: 1.25rem;
@@ -47,17 +33,22 @@
       flex-grow: 1;
       text-align: center;
     }
-    .logout-link {
+    nav a {
       color: var(--text-light);
       text-decoration: none;
       font-size: 1rem;
+      margin-left: 1rem;
     }
-    .logout-link:hover {
-      text-decoration: underline;
+    nav a:hover { text-decoration: underline; }
+    .menu-btn {
+      font-size: 1.5rem;
+      background: none;
+      border: none;
+      color: var(--text-light);
+      cursor: pointer;
     }
     .sidebar {
-      position: fixed;
-      top: 0; left: 0;
+      position: fixed; top: 0; left: 0;
       width: 0; height: 100%;
       background: #333;
       overflow-x: hidden;
@@ -75,19 +66,13 @@
     }
     .sidebar a:hover { background: #575757; }
     .content {
-      margin-top: 70px;
+      margin-top: 80px;
       padding: 2rem;
-    }
-    .content h1 {
-      margin-bottom: 1.5rem;
-      color: var(--text-light);
-      text-align: center;
     }
     .plans {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 1.5rem;
-      align-items: stretch;
     }
     .card {
       background: var(--card-bg);
@@ -144,106 +129,73 @@
     .btn:hover {
       background: #e85a5a;
     }
+    .cancel-container {
+      text-align: center;
+      margin-top: 2rem;
+    }
   </style>
 </head>
 <body>
 
-  <header>
-    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-    <h1>Purchase Programs</h1>
-    <a href="/logout" class="logout-link">Logout</a>
-  </header>
-
-  <div id="sidebar" class="sidebar">
-    <a href="/dashboard">Dashboard</a>
-    <a href="/account_settings">Account Settings</a>
-    <a href="/plan_builder">Build Plan & Nutrition</a>
-    <a href="/plans">Find Plans</a>
-    <a href="/coordinate_nutrition">Coordinate Nutrition</a>
-    <a href="/purchase_program">Purchase Programs</a>
-    <a href="/class_registration">Register Classes</a>
-    <a href="/contact_gym">Contact Gym Office</a>
+<header>
+  <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+  <h1>Purchase Programs</h1>
+  <nav>
+    <a href="/about">About</a>
     <a href="/logout">Logout</a>
+  </nav>
+</header>
+
+<div id="sidebar" class="sidebar">
+  <a href="/purchase_program">Purchase Programs</a>
+  <a href="/plan_builder">Build Plan & Nutrition</a>
+  <a href="/plans">Find Plans</a>
+  <a href="/coordinate_nutrition">Coordinate Nutrition</a>
+  <a href="/class_registration">Register Classes</a>
+  <a href="/logout">Logout</a>
+</div>
+
+<div class="content">
+  <h1>Choose Your Plan</h1>
+  <div class="plans">
+    {% for plan in [
+      {'name': 'Bronze', 'price': '$29', 'features': ['3 sessions / month', 'Basic workout plan']},
+      {'name': 'Silver', 'price': '$49', 'features': ['Includes Bronze', 'Nutrition tips', 'Unlimited chat support']},
+      {'name': 'Gold', 'price': '$79', 'features': ['Includes Silver', '1 personal session / week', 'Custom meal plan']},
+      {'name': 'Platinum', 'price': '$119', 'features': ['Includes Gold', 'Unlimited trainer sessions', 'VIP spa access']}
+    ] %}
+    <form class="card" method="post" action="/update_plan">
+      <div>
+        <h2>{{ plan.name }} Plan</h2>
+        <ul>
+          {% for item in plan.features %}
+            <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div>
+        <div class="price">{{ plan.price }}<span style="font-size:0.8rem;">/mo</span></div>
+        <input type="hidden" name="plan" value="{{ plan.name }}">
+        <button class="btn" type="submit">Select</button>
+      </div>
+    </form>
+    {% endfor %}
   </div>
 
-  <div class="content">
-    <h1>Choose Your Plan</h1>
-    <div class="plans">
-      <div class="card">
-        <div>
-          <h2>Bronze Plan</h2>
-          <ul>
-            <li>3 sessions / month</li>
-            <li>Basic workout plan</li>
-          </ul>
-        </div>
-        <div>
-          <div class="price">$29<span style="font-size:0.8rem;">/mo</span></div>
-          <button class="btn">Purchase</button>
-        </div>
-      </div>
-      <div class="card">
-        <div>
-          <h2>Silver Plan</h2>
-          <ul>
-            <li>Includes Bronze</li>
-            <li>Nutrition tips</li>
-            <li>Unlimited chat support</li>
-          </ul>
-        </div>
-        <div>
-          <div class="price">$49<span style="font-size:0.8rem;">/mo</span></div>
-          <button class="btn">Purchase</button>
-        </div>
-      </div>
-      <div class="card">
-        <div>
-          <h2>Gold Plan</h2>
-          <ul>
-            <li>Includes Silver</li>
-            <li>1 personal session / week</li>
-            <li>Custom meal plan</li>
-          </ul>
-        </div>
-        <div>
-          <div class="price">$79<span style="font-size:0.8rem;">/mo</span></div>
-          <button class="btn">Purchase</button>
-        </div>
-      </div>
-      <div class="card">
-        <div>
-          <h2>Platinum Plan</h2>
-          <ul>
-            <li>Includes Gold</li>
-            <li>Unlimited trainer sessions</li>
-            <li>VIP sauna & spa access</li>
-          </ul>
-        </div>
-        <div>
-          <div class="price">$119<span style="font-size:0.8rem;">/mo</span></div>
-          <button class="btn">Purchase</button>
-        </div>
-      </div>
-    </div>
+  <div class="cancel-container">
+    <form method="post" action="/update_plan">
+      <input type="hidden" name="plan" value="Free membership">
+      <button class="btn" style="max-width: 300px; margin-top: 1rem;">Cancel Current Plan</button>
+    </form>
   </div>
+</div>
 
-  <script>
-    function toggleSidebar() {
-      const sb = document.getElementById('sidebar');
-      sb.style.width = sb.style.width === '250px' ? '0' : '250px';
-    }
-    document.addEventListener('click', e => {
-      const sb = document.getElementById('sidebar');
-      const btn = document.querySelector('.menu-btn');
-      if (
-        sb.style.width === '250px' &&
-        !sb.contains(e.target) &&
-        !btn.contains(e.target)
-      ) {
-        sb.style.width = '0';
-      }
-    });
-  </script>
+<script>
+  function toggleSidebar() {
+    const sb = document.getElementById('sidebar');
+    sb.style.width = sb.style.width === '250px' ? '0' : '250px';
+  }
+</script>
 
 </body>
 </html>

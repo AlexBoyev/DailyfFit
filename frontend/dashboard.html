@@ -19,6 +19,10 @@
       background: var(--dark-bg); color: var(--text-light);
       padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; z-index:1;
     }
+    nav a {
+      color: var(--text-light); margin-left: 1rem; text-decoration: none;
+    }
+    nav a:hover { color: var(--primary); }
     .menu-btn {
       background:none; border:none; color: var(--text-light);
       font-size:1.5rem; cursor:pointer;
@@ -70,17 +74,19 @@
   <header>
     <button class="menu-btn" onclick="toggleSidebar()">☰</button>
     <h1>DailyFit Dashboard</h1>
-    <a href="/logout" style="color: var(--text-light); text-decoration:none;">Logout</a>
+    <nav>
+      <a href="/about">About</a>
+      <a href="/logout">Logout</a>
+    </nav>
   </header>
 
   <div id="mySidebar" class="sidebar">
-    <a href="/account_settings">Account Settings</a>
+    <a href="/purchase_program">Purchase Programs</a>
     <a href="/plan_builder">Build Plan & Nutrition</a>
     <a href="/plans">Find Plans</a>
     <a href="/coordinate_nutrition">Coordinate Nutrition</a>
-    <a href="/purchase_program">Purchase Programs</a>
     <a href="/class_registration">Register Classes</a>
-    <a href="/contact_gym">Contact Gym Office</a>
+    <a href="/account_settings">Account Settings</a>
     <a href="/logout">Logout</a>
   </div>
 

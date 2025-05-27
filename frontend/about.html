@@ -94,14 +94,20 @@
 </head>
 <body>
   <header>
-    <a href="/" class="logo">
+    <a href="/dashboard" class="logo">
       <img src="/images/logo.png" alt="Logo">
       <span>DailyFit</span>
     </a>
     <nav>
-      <a href="/login">Login</a>
-      <a href="/register">Register</a>
-      <a href="/about">About</a>
+      {% if is_logged_in %}
+        <a href="/dashboard">Dashboard</a>
+        <a href="/about">About</a>
+        <a href="/logout">Logout</a>
+      {% else %}
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+        <a href="/about">About</a>
+      {% endif %}
     </nav>
   </header>
 
