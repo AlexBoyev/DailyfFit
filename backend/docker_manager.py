@@ -26,6 +26,14 @@ def is_container_running():
         return False
 
 def initialize_docker():
+    if not is_docker_running():
+        print("❌ Docker is not running. Please start Docker first.")
+        return False
+
+    if is_container_running():
+        print("✅ MySQL container is already running.")
+        return True
+
     try:
         # Get the project root directory
         project_root = Path(__file__).resolve().parent.parent
@@ -38,7 +46,7 @@ def initialize_docker():
         )
         
         # Wait for MySQL to be ready
-        print("Waiting for MySQL to be ready...")
+        print("⏳ Waiting for MySQL to be ready...")
         max_attempts = 30
         attempt = 0
         
@@ -56,23 +64,27 @@ def initialize_docker():
                     capture_output=True,
                     check=True
                 )
-                print("MySQL is ready!")
+                print("✅ MySQL is ready!")
                 return True
             except subprocess.CalledProcessError:
                 attempt += 1
                 time.sleep(1)
         
-        print("Error: MySQL did not become ready in time")
+        print("❌ Error: MySQL did not become ready in time")
         return False
     except subprocess.CalledProcessError as e:
-        print(f"Error initializing Docker: {str(e)}")
+        print(f"❌ Error initializing Docker: {str(e)}")
         return False
 
 def ensure_schema_loaded():
+    if not is_container_running():
+        if not initialize_docker():
+            return False
+
     try:
         from load_schema import ensure_schema
         ensure_schema()
         return True
     except Exception as e:
-        print(f"Error loading schema: {str(e)}")
+        print(f"❌ Error loading schema: {str(e)}")
         return False
