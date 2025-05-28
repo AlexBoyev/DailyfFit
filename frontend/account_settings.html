@@ -150,7 +150,7 @@
       font-weight: 500;
       margin-bottom: 0.5rem;
     }
-    input, select {
+    input, select, textarea {
       padding: 0.75rem;
       border: 1px solid #ccc;
       border-radius: 6px;
@@ -197,6 +197,49 @@
       font-weight: 500;
       margin-bottom: 1rem;
     }
+    .info-box {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #eee;
+    }
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    .info-label {
+      color: #666;
+      font-weight: 500;
+    }
+    .info-value {
+      color: #333;
+      font-weight: 600;
+    }
+    .trainer-info {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+    }
+    .trainer-status {
+      color: #666;
+      font-style: italic;
+    }
+    .welcome-message {
+      background: #e8f5e9;
+      color: #2e7d32;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 2rem;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -207,17 +250,18 @@
     <div class="logo">DailyFit</div>
   </div>
   <nav>
+    <a href="/dashboard">Dashboard</a>
     <a href="/about">About</a>
     <a href="/logout">Logout</a>
   </nav>
 </header>
 
 <div class="sidebar" id="sideBar">
+  <a href="/dashboard">Dashboard</a>
   <a href="/purchase_program">Purchase Programs</a>
-  <a href="/plan_builder">Build Plan & Nutrition</a>
-  <a href="/plans">Find Plans</a>
-  <a href="/coordinate_nutrition">Coordinate Nutrition</a>
-  <a href="/class_registration">Register Classes</a>
+  <a href="/account_settings">Account Settings</a>
+  <a href="/about">About</a>
+  <a href="/logout">Logout</a>
 </div>
 
 <div class="container">
@@ -235,15 +279,31 @@
 
   <main>
     <div id="settingsTab" class="tab-content">
+      <div class="welcome-message" id="welcomeMessage">
+        Welcome to DailyFit! Please complete your profile information below.
+      </div>
+
       <h1>Account Settings</h1>
-      <div class="current-plan">
-        Current Plan: <strong>{{ membershipPlan }}</strong>
-        <a href="/purchase_program" style="margin-left:1rem; color:#ff6b6b; text-decoration: underline;">Change Plan</a>
-        <form method="post" action="/update_plan">
+      
+      <div class="info-box">
+        <h3>Membership Information</h3>
+        <div class="info-row">
+          <span class="info-label">Current Plan:</span>
+          <span class="info-value">{{ membershipPlan }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Personal Trainer:</span>
+          <span class="info-value">{{ trainer_name or 'Not assigned' }}</span>
+        </div>
+        <div class="trainer-info">
+          <p class="trainer-status">Personal training services are coming soon! Stay tuned for updates.</p>
+        </div>
+        <form method="post" action="/update_plan" style="margin-top: 1rem;">
           <input type="hidden" name="plan" value="Free membership">
           <button class="btn-cancel-plan" type="submit" onclick="return confirm('Are you sure you want to cancel your current plan?')">Cancel Plan</button>
         </form>
       </div>
+
       <form method="post" enctype="multipart/form-data">
         <div class="form-row">
           <div class="form-group">
@@ -255,6 +315,7 @@
             <input type="email" id="email" name="email" value="{{ email }}">
           </div>
         </div>
+
         <div class="form-row">
           <div class="form-group">
             <label for="phone">Phone</label>
@@ -265,6 +326,7 @@
             <input type="text" id="address" name="address" value="{{ address }}">
           </div>
         </div>
+
         <div class="form-row">
           <div class="form-group">
             <label for="height_cm">Height (cm)</label>
@@ -275,6 +337,7 @@
             <input type="number" id="weight_kg" name="weight_kg" value="{{ weight_kg }}">
           </div>
         </div>
+
         <div class="form-row">
           <div class="form-group">
             <label for="age">Age</label>
@@ -290,6 +353,33 @@
             </select>
           </div>
         </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fitness_level">Fitness Level</label>
+            <select id="fitness_level" name="fitness_level">
+              <option value="">Select Level</option>
+              <option value="beginner" {% if fitness_level == 'beginner' %}selected{% endif %}>Beginner</option>
+              <option value="intermediate" {% if fitness_level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+              <option value="advanced" {% if fitness_level == 'advanced' %}selected{% endif %}>Advanced</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="preferred_training_time">Preferred Training Time</label>
+            <select id="preferred_training_time" name="preferred_training_time">
+              <option value="">Select Time</option>
+              <option value="morning" {% if preferred_training_time == 'morning' %}selected{% endif %}>Morning</option>
+              <option value="afternoon" {% if preferred_training_time == 'afternoon' %}selected{% endif %}>Afternoon</option>
+              <option value="evening" {% if preferred_training_time == 'evening' %}selected{% endif %}>Evening</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="medical_conditions">Medical Conditions (if any)</label>
+          <textarea id="medical_conditions" name="medical_conditions" rows="3">{{ medical_conditions }}</textarea>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label for="profile_picture">Update Profile Picture</label>
@@ -297,8 +387,9 @@
             <input type="hidden" name="existing_profile_picture" value="{{ profile_picture }}">
           </div>
         </div>
+
         <div class="actions">
-          <button class="btn-update" type="submit">Update</button>
+          <button class="btn-update" type="submit">Update Profile</button>
         </div>
       </form>
     </div>
@@ -354,9 +445,11 @@
 
 <script>
   const sidebar = document.getElementById('sideBar');
+  
   function toggleSidebar() {
     sidebar.classList.toggle('active');
   }
+  
   document.addEventListener('click', function (event) {
     const isClickInside = sidebar.contains(event.target) || event.target.classList.contains('hamburger');
     if (!isClickInside) sidebar.classList.remove('active');
@@ -369,11 +462,18 @@
     if (element) element.classList.add('active');
   }
 
-  window.addEventListener("DOMContentLoaded", function () {
-    {% if active_tab %}
-      showTab("{{ active_tab }}");
-    {% endif %}
+  // Show welcome message for new users
+  window.addEventListener('DOMContentLoaded', function() {
+    const requiredFields = ['height_cm', 'weight_kg', 'age', 'gender', 'fitness_level'];
+    const isNewUser = requiredFields.some(field => !document.getElementById(field).value);
+    if (isNewUser) {
+      document.getElementById('welcomeMessage').style.display = 'block';
+    }
   });
+
+  {% if active_tab %}
+    showTab("{{ active_tab }}");
+  {% endif %}
 </script>
 
 </body>
