@@ -4,11 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DailyFit — Register</title>
-
-  <!-- Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
   <style>
     :root {
       --primary-color: #ff6b6b;
@@ -118,11 +114,11 @@
       <h2>Create Your Account</h2>
       <form id="registerForm">
         <input type="text" id="name" placeholder="Full Name" required />
-        <input type="text" id="address" placeholder="Address" required />
-        <input type="text" id="phone" placeholder="Phone (digits only)" required pattern="\d+" title="Digits only" />
         <input type="email" id="email" placeholder="Email" required />
         <input type="password" id="password" placeholder="Password" required />
         <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
+        <input type="text" id="phone" placeholder="Phone (digits only)" required pattern="\d+" title="Digits only" />
+        <input type="text" id="address" placeholder="Address" required />
         <button type="submit">Register</button>
       </form>
       <div class="bottom-text">
@@ -141,16 +137,16 @@
         return document.getElementById('response').innerText = 'Passwords do not match.';
       }
       const payload = {
-        name:     document.getElementById('name').value.trim(),
-        address:  document.getElementById('address').value.trim(),
-        phone:    document.getElementById('phone').value.trim(),
-        email:    document.getElementById('email').value.trim(),
-        password: pwd
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: pwd,
+        phone: document.getElementById('phone').value.trim(),
+        address: document.getElementById('address').value.trim()
       };
       try {
         const res = await fetch('/register', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
           body: JSON.stringify(payload)
         });
         const data = await res.json();
