@@ -473,12 +473,61 @@
     </div>
 
     <div id="nutritionTab" class="tab-content" style="display:none;">
-            <h1>Nutrition Preferences</h1>
-      <p>Nutrition-related information and preferences will appear here soon.</p>
-    </div> <!-- Close nutritionTab -->
+      <h1>Nutrition Preferences</h1>
+      
+      <form method="post" action="/update_nutrition">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="calories">Daily Calorie Target</label>
+            <input type="number" id="calories" name="calories" value="{{ calories }}" placeholder="e.g., 2000">
+          </div>
+          <div class="form-group">
+            <label for="diet_type">Diet Type</label>
+            <select id="diet_type" name="diet_type">
+              <option value="none" {% if diet_type == 'none' %}selected{% endif %}>Regular</option>
+              <option value="vegan" {% if diet_type == 'vegan' %}selected{% endif %}>Vegan</option>
+              <option value="vegetarian" {% if diet_type == 'vegetarian' %}selected{% endif %}>Vegetarian</option>
+              <option value="keto" {% if diet_type == 'keto' %}selected{% endif %}>Keto</option>
+              <option value="paleo" {% if diet_type == 'paleo' %}selected{% endif %}>Paleo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="protein_grams">Daily Protein Target (g)</label>
+            <input type="number" id="protein_grams" name="protein_grams" value="{{ protein_grams }}" placeholder="e.g., 150">
+          </div>
+          <div class="form-group">
+            <label for="carbs_grams">Daily Carbs Target (g)</label>
+            <input type="number" id="carbs_grams" name="carbs_grams" value="{{ carbs_grams }}" placeholder="e.g., 200">
+          </div>
+          <div class="form-group">
+            <label for="fat_grams">Daily Fat Target (g)</label>
+            <input type="number" id="fat_grams" name="fat_grams" value="{{ fat_grams }}" placeholder="e.g., 65">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="nutrition_notes">Additional Notes</label>
+          <textarea id="nutrition_notes" name="nutrition_notes" rows="3" placeholder="Any allergies, preferences, or restrictions...">{{ nutrition_notes }}</textarea>
+        </div>
+
+        <div class="actions">
+          <button class="btn-update" type="submit">Update Nutrition Preferences</button>
+        </div>
+      </form>
+
+      {% if nutrition_success %}
+        <div class="success-message">{{ nutrition_success }}</div>
+      {% endif %}
+      {% if nutrition_error %}
+        <div class="error-message">{{ nutrition_error }}</div>
+      {% endif %}
+    </div>
 
   </main>
-</div> <!-- Close container -->
+</div>
 
 <script>
   function showTab(tabId, el) {
