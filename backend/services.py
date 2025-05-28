@@ -46,8 +46,11 @@ class UserService:
         try:
             cur.execute(
                 """
-                INSERT INTO Users (name, email, password_hash, role, address, phone)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO Users (
+                    name, email, password_hash, role, address, phone,
+                    signup_date, last_login, is_active
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     user_data["name"],
@@ -55,7 +58,10 @@ class UserService:
                     pwd_hash,
                     "user",
                     user_data["address"],
-                    user_data["phone"]
+                    user_data["phone"],
+                    datetime.now(),
+                    datetime.now(),
+                    True
                 )
             )
             conn.commit()
@@ -72,13 +78,21 @@ class UserService:
     def login(self, email, password):
         conn = get_connection()
         cur = conn.cursor(dictionary=True)
+        
+        # Update last_login time
+        now = datetime.now()
+        
         cur.execute("SELECT * FROM Users WHERE email=%s", (email,))
         user = cur.fetchone()
-        cur.close()
-        conn.close()
-
+        
         if not user or not bcrypt.checkpw(password.encode(), user["password_hash"].encode()):
+            cur.close()
+            conn.close()
             raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        # Update last_login
+        cur.execute("UPDATE Users SET last_login = %s WHERE email = %s", (now, email))
+        conn.commit()
 
         payload = {
             "sub": user["email"],
@@ -87,6 +101,10 @@ class UserService:
         }
 
         token = jwt.encode(payload, SECRET, algorithm=ALGORITHM)
+        
+        cur.close()
+        conn.close()
+        
         return {
             "token": token,
             "name": user["name"],
