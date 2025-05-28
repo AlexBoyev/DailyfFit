@@ -155,7 +155,6 @@ def account_settings(request: Request):
     user_data = UserService().get_user_data_from_request(request)
     return templates.TemplateResponse("account_settings.html", {"request": request, **user_data})
 
-
 @app.post("/update_plan")
 async def update_plan(request: Request, plan: str = Form(...)):
     UserService().update_plan(request, plan)
@@ -188,18 +187,20 @@ async def update_password(
     user_data = UserService().get_user_data_from_request(request)
     return templates.TemplateResponse("account_settings.html", {**template_data, **user_data, "success_message": "Password updated successfully.", "active_tab": "securityTab"})
 
-
 @app.post("/account_settings")
 async def update_account_settings(
     request: Request,
-    name: str = Form(...),
-    email: str = Form(...),
-    phone: str = Form(...),
-    address: str = Form(...),
-    height_cm: int = Form(...),
-    weight_kg: int = Form(...),
-    age: int = Form(...),
-    gender: str = Form(...),
+    name: str = Form(None),
+    email: str = Form(None),
+    phone: str = Form(None),
+    address: str = Form(None),
+    height_cm: int = Form(None),
+    weight_kg: int = Form(None),
+    age: int = Form(None),
+    gender: str = Form(None),
+    fitness_level: str = Form(None),
+    medical_conditions: str = Form(None),
+    preferred_training_time: str = Form(None),
     profile_picture: UploadFile = File(None),
     existing_profile_picture: str = Form(None)
 ):
@@ -215,10 +216,10 @@ async def update_account_settings(
 
     UserService().update_user_profile(
         request, name, email, phone, address,
-        height_cm, weight_kg, age, gender, filename
+        height_cm, weight_kg, age, gender, filename,
+        fitness_level, medical_conditions, preferred_training_time
     )
     return RedirectResponse("/account_settings", status_code=303)
-
 
 if __name__ == "__main__":
     uvicorn.run("backend.main:app", host="127.0.0.1", port=8001, reload=True)

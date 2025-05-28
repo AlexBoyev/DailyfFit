@@ -136,17 +136,23 @@ class UserService:
             "email": user.get("email", ""),
             "phone": user.get("phone", ""),
             "address": user.get("address", ""),
-            "height_cm": user.get("height_cm", ""),
-            "weight_kg": user.get("weight_kg", ""),
-            "age": user.get("age", ""),
+            "height_cm": user.get("height_cm"),
+            "weight_kg": user.get("weight_kg"),
+            "age": user.get("age"),
             "gender": user.get("gender", ""),
             "membershipPlan": user.get("membership_plan", "Free membership"),
-            "profile_picture": user.get("profile_picture")
+            "profile_picture": user.get("profile_picture"),
+            "fitness_level": user.get("fitness_level", ""),
+            "medical_conditions": user.get("medical_conditions", ""),
+            "preferred_training_time": user.get("preferred_training_time", ""),
+            "trainer_name": user.get("trainer_name", "Not assigned")
         }
 
     def update_user_profile(
             self, request: Request, name, email, phone, address,
-            height_cm, weight_kg, age, gender, profile_filename
+            height_cm, weight_kg, age, gender, profile_filename,
+            fitness_level=None, medical_conditions=None, 
+            preferred_training_time=None
     ):
         token = request.cookies.get("token")
         if not token:
@@ -170,24 +176,34 @@ class UserService:
         # Preserve existing profile picture if not updated
         new_picture = profile_filename if profile_filename else current.get("profile_picture")
 
+        # Convert empty strings to None for numeric fields
+        height_cm = int(height_cm) if height_cm else current["height_cm"]
+        weight_kg = int(weight_kg) if weight_kg else current["weight_kg"]
+        age = int(age) if age else current["age"]
+
         # Use current values if new ones are not provided
         updated_values = {
             "name": name or current["name"],
             "email": email or current["email"],
             "phone": phone or current["phone"],
             "address": address or current["address"],
-            "height_cm": height_cm or current["height_cm"],
-            "weight_kg": weight_kg or current["weight_kg"],
-            "age": age or current["age"],
+            "height_cm": height_cm,
+            "weight_kg": weight_kg,
+            "age": age,
             "gender": gender or current["gender"],
-            "profile_picture": new_picture
+            "profile_picture": new_picture,
+            "fitness_level": fitness_level or current["fitness_level"],
+            "medical_conditions": medical_conditions or current["medical_conditions"],
+            "preferred_training_time": preferred_training_time or current["preferred_training_time"]
         }
 
         cur.execute("""
             UPDATE Users SET
                 name=%s, email=%s, phone=%s, address=%s,
                 height_cm=%s, weight_kg=%s, age=%s,
-                gender=%s, profile_picture=%s
+                gender=%s, profile_picture=%s,
+                fitness_level=%s, medical_conditions=%s,
+                preferred_training_time=%s
             WHERE email=%s
         """, (
             updated_values["name"], updated_values["email"],
@@ -195,6 +211,9 @@ class UserService:
             updated_values["height_cm"], updated_values["weight_kg"],
             updated_values["age"], updated_values["gender"],
             updated_values["profile_picture"],
+            updated_values["fitness_level"],
+            updated_values["medical_conditions"],
+            updated_values["preferred_training_time"],
             current_email
         ))
 
