@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS TrainingPlans (
 
 CREATE TABLE IF NOT EXISTS NutritionMenus (
     id              INT AUTO_INCREMENT PRIMARY KEY,
+    user_id         INT,
     title           VARCHAR(100),
     calories        INT,
     type            ENUM('weight_loss','muscle_gain','fitness'),
@@ -46,7 +47,8 @@ CREATE TABLE IF NOT EXISTS NutritionMenus (
     carbs_grams     INT,
     fat_grams       INT,
     created_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
-    last_updated    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    last_updated    DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(id)
 );
 
 CREATE TABLE IF NOT EXISTS Classes (
