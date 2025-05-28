@@ -2,6 +2,10 @@ import subprocess
 import time
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 def is_docker_running():
     try:
@@ -37,10 +41,18 @@ def initialize_docker():
         print("Waiting for MySQL to be ready...")
         max_attempts = 30
         attempt = 0
+        
+        # Get MySQL credentials from environment
+        db_user = os.getenv("DB_USER", "root")
+        db_password = os.getenv("DB_PASSWORD", "yourpassword")
+        
         while attempt < max_attempts:
             try:
                 subprocess.run(
-                    ["docker", "exec", "dailyfit-mysql", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pyourpassword"],
+                    ["docker", "exec", "dailyfit-mysql", "mysqladmin", "ping", 
+                     "-h", "localhost", 
+                     "-u", db_user, 
+                     f"-p{db_password}"],
                     capture_output=True,
                     check=True
                 )
