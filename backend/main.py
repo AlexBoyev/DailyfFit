@@ -1,7 +1,6 @@
 import os
 import requests
 from pathlib import Path
-
 from fastapi import FastAPI, Request, status, HTTPException, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,6 +10,7 @@ from dotenv import load_dotenv
 import uvicorn
 from services import UserService
 from chatbot import get_bot_response
+from docker_manager import is_docker_running, is_container_running, initialize_docker, ensure_schema_loaded
 
 # ─── Load configuration ───────────────────────────────────────────────────────
 load_dotenv()
@@ -19,6 +19,29 @@ ALGORITHM       = os.getenv("ALGORITHM", "HS256")
 CAPTCHA_ENABLED = os.getenv("CAPTCHA_ENABLED", "true").lower() == "true"
 RECAPTCHA_KEY   = os.getenv("RECAPTCHA_SECRET_KEY")
 SITE_KEY        = os.getenv("SITE_KEY")
+
+def initialize_application():
+    # Check if Docker is running
+    if not is_docker_running():
+        print("Error: Docker is not running. Please start Docker and try again.")
+        return False
+
+    # Check if container is already running
+    if not is_container_running():
+        print("Initializing Docker container...")
+        if not initialize_docker():
+            return False
+        
+        print("Loading database schema...")
+        if not ensure_schema_loaded():
+            return False
+    
+    return True
+
+# Initialize application
+if not initialize_application():
+    print("Application initialization failed. Exiting.")
+    exit(1)
 
 # ─── Paths & Static mounts ────────────────────────────────────────────────────
 BASE_DIR     = Path(__file__).resolve().parent
