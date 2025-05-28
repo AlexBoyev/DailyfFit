@@ -1,7 +1,6 @@
 import os
 import requests
 from pathlib import Path
-
 from fastapi import FastAPI, Request, status, HTTPException, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,19 +10,45 @@ from dotenv import load_dotenv
 import uvicorn
 from services import UserService
 from chatbot import get_bot_response
+from docker_manager import is_docker_running, is_container_running, initialize_docker, ensure_schema_loaded
 
 # ─── Load configuration ───────────────────────────────────────────────────────
 load_dotenv()
-SECRET_KEY      = os.getenv("SECRET_KEY")
-ALGORITHM       = os.getenv("ALGORITHM", "HS256")
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
 CAPTCHA_ENABLED = os.getenv("CAPTCHA_ENABLED", "true").lower() == "true"
-RECAPTCHA_KEY   = os.getenv("RECAPTCHA_SECRET_KEY")
-SITE_KEY        = os.getenv("SITE_KEY")
+RECAPTCHA_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
+SITE_KEY = os.getenv("SITE_KEY")
+
+
+def initialize_application():
+    # Check if Docker is running
+    if not is_docker_running():
+        print("Error: Docker is not running. Please start Docker and try again.")
+        return False
+
+    # Check if container is already running
+    if not is_container_running():
+        print("Initializing Docker container...")
+        if not initialize_docker():
+            return False
+
+        print("Loading database schema...")
+        if not ensure_schema_loaded():
+            return False
+
+    return True
+
+
+# Initialize application
+if not initialize_application():
+    print("Application initialization failed. Exiting.")
+    exit(1)
 
 # ─── Paths & Static mounts ────────────────────────────────────────────────────
-BASE_DIR     = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR.parent / "frontend"
-UPLOADS_DIR  = FRONTEND_DIR / "images" / "uploads"
+UPLOADS_DIR = FRONTEND_DIR / "images" / "uploads"
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(debug=True)
@@ -31,6 +56,7 @@ app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 app.mount("/images", StaticFiles(directory=str(FRONTEND_DIR / "images")), name="images")
 
 templates = Jinja2Templates(directory=str(FRONTEND_DIR))
+
 
 # ─── Utility: reCAPTCHA check ─────────────────────────────────────────────────
 def verify_recaptcha(token: str) -> bool:
@@ -46,10 +72,12 @@ def verify_recaptcha(token: str) -> bool:
     except:
         return False
 
+
 # ─── Public routes ────────────────────────────────────────────────────────────
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
 
 @app.get("/login", response_class=HTMLResponse)
 def login_get(request: Request):
@@ -57,6 +85,7 @@ def login_get(request: Request):
         "login.html",
         {"request": request, "site_key": SITE_KEY, "captcha_enabled": CAPTCHA_ENABLED}
     )
+
 
 @app.post("/login")
 async def login_post(request: Request):
@@ -68,20 +97,24 @@ async def login_post(request: Request):
     resp.set_cookie("token", result["token"], httponly=True, samesite="Lax", secure=False, path="/")
     return resp
 
+
 @app.get("/logout")
 def logout():
     resp = RedirectResponse("/login", status_code=302)
     resp.delete_cookie("token", path="/")
     return resp
 
+
 @app.get("/register", response_class=HTMLResponse)
 def register_get(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
+
 
 @app.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_post(request: Request):
     data = await request.json()
     return UserService().register_user(data)
+
 
 @app.get("/about", response_class=HTMLResponse)
 def about(request: Request):
@@ -95,12 +128,14 @@ def about(request: Request):
         pass
     return templates.TemplateResponse("about.html", {"request": request, "is_logged_in": is_logged_in})
 
+
 # ─── Chatbot API ───────────────────────────────────────────────────────────────
 @app.post("/api/chat")
 async def chat_api(request: Request):
     data = await request.json()
     reply = get_bot_response(data.get("message", ""))
     return {"reply": reply}
+
 
 # ─── Auth middleware for protected pages ──────────────────────────────────────
 @app.middleware("http")
@@ -118,14 +153,17 @@ async def auth_middleware(request: Request, call_next):
             return resp
     return await call_next(request)
 
+
 # ─── Protected routes ─────────────────────────────────────────────────────────
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
+
 @app.get("/purchase_program", response_class=HTMLResponse)
 def purchase_program(request: Request):
     return templates.TemplateResponse("purchase_program.html", {"request": request})
+
 
 @app.get("/account_settings", response_class=HTMLResponse)
 def account_settings(request: Request):
@@ -138,19 +176,21 @@ async def update_plan(request: Request, plan: str = Form(...)):
     UserService().update_plan(request, plan)
     return RedirectResponse("/account_settings", status_code=303)
 
+
 @app.post("/update_password")
 async def update_password(
-    request: Request,
-    current_password: str = Form(...),
-    new_password: str = Form(...),
-    confirm_password: str = Form(...)
+        request: Request,
+        current_password: str = Form(...),
+        new_password: str = Form(...),
+        confirm_password: str = Form(...)
 ):
     template_data = {"request": request}
 
     if new_password != confirm_password:
         template_data["mismatch_error"] = "Passwords do not match"
         user_data = UserService().get_user_data_from_request(request)
-        return templates.TemplateResponse("account_settings.html", {**template_data, **user_data, "active_tab": "securityTab"})
+        return templates.TemplateResponse("account_settings.html",
+                                          {**template_data, **user_data, "active_tab": "securityTab"})
 
     try:
         UserService().update_password(request, current_password, new_password)
@@ -158,27 +198,33 @@ async def update_password(
         if e.status_code == 403:
             template_data["password_error"] = "Current password is incorrect"
             user_data = UserService().get_user_data_from_request(request)
-            return templates.TemplateResponse("account_settings.html", {**template_data, **user_data, "active_tab": "securityTab"})
+            return templates.TemplateResponse("account_settings.html",
+                                              {**template_data, **user_data, "active_tab": "securityTab"})
         else:
             raise
 
     user_data = UserService().get_user_data_from_request(request)
-    return templates.TemplateResponse("account_settings.html", {**template_data, **user_data, "success_message": "Password updated successfully.", "active_tab": "securityTab"})
+    return templates.TemplateResponse("account_settings.html", {**template_data, **user_data,
+                                                                "success_message": "Password updated successfully.",
+                                                                "active_tab": "securityTab"})
 
 
 @app.post("/account_settings")
 async def update_account_settings(
-    request: Request,
-    name: str = Form(...),
-    email: str = Form(...),
-    phone: str = Form(...),
-    address: str = Form(...),
-    height_cm: int = Form(...),
-    weight_kg: int = Form(...),
-    age: int = Form(...),
-    gender: str = Form(...),
-    profile_picture: UploadFile = File(None),
-    existing_profile_picture: str = Form(None)
+        request: Request,
+        name: str = Form(None),
+        email: str = Form(None),
+        phone: str = Form(None),
+        address: str = Form(None),
+        height_cm: int = Form(None),
+        weight_kg: int = Form(None),
+        age: int = Form(None),
+        gender: str = Form(None),
+        fitness_level: str = Form(None),
+        medical_conditions: str = Form(None),
+        preferred_training_time: str = Form(None),
+        profile_picture: UploadFile = File(None),
+        existing_profile_picture: str = Form(None)
 ):
     filename = None
 
@@ -192,7 +238,8 @@ async def update_account_settings(
 
     UserService().update_user_profile(
         request, name, email, phone, address,
-        height_cm, weight_kg, age, gender, filename
+        height_cm, weight_kg, age, gender, filename,
+        fitness_level, medical_conditions, preferred_training_time
     )
     return RedirectResponse("/account_settings", status_code=303)
 

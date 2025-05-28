@@ -20,6 +20,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
     }
     .header-left {
       display: flex;
@@ -72,14 +77,18 @@
     }
     .container {
       display: flex;
-      margin-top: 60px;
+      padding-top: 60px;
+      min-height: 100vh;
     }
     aside {
       width: 260px;
       background: #fff;
       padding: 2rem 1rem;
       box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-      height: 100vh;
+      position: fixed;
+      top: 60px;
+      bottom: 0;
+      overflow-y: auto;
     }
     aside img {
       width: 100px;
@@ -120,6 +129,7 @@
     }
     main {
       flex: 1;
+      margin-left: 260px;
       padding: 2rem;
     }
     main h1 {
@@ -127,14 +137,46 @@
       font-weight: 600;
       margin-bottom: 1.5rem;
     }
-    .current-plan {
-      background: #fff3f3;
-      padding: 1rem 1.25rem;
-      border: 1px solid #ffbaba;
-      border-left: 5px solid #ff6b6b;
-      border-radius: 6px;
+    .tab-content {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .info-box {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       margin-bottom: 2rem;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #eee;
+    }
+    .info-row:last-child {
+      border-bottom: none;
+    }
+    .info-label {
+      color: #666;
       font-weight: 500;
+    }
+    .info-value {
+      color: #333;
+      font-weight: 600;
+    }
+    .trainer-info {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+    }
+    .trainer-status {
+      color: #666;
+      font-style: italic;
     }
     .form-row {
       display: flex;
@@ -150,11 +192,16 @@
       font-weight: 500;
       margin-bottom: 0.5rem;
     }
-    input, select {
+    input, select, textarea {
       padding: 0.75rem;
       border: 1px solid #ccc;
       border-radius: 6px;
       font-size: 1rem;
+      width: 100%;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 100px;
     }
     .actions {
       margin-top: 2rem;
@@ -167,35 +214,51 @@
       border-radius: 6px;
       cursor: pointer;
       border: none;
+      text-align: center;
+      text-decoration: none;
+      font-family: 'Poppins', sans-serif;
+      line-height: 1.2;
     }
-    .btn-update { background: #ff6b6b; color: white; }
-    .btn-cancel { background: #ddd; }
-    .btn-cancel-plan {
+    .btn-update {
       background: #ff6b6b;
       color: white;
-      padding: 0.5rem 1rem;
+      transition: background-color 0.2s;
+    }
+    .btn-update:hover {
+      background: #ff5252;
+    }
+    .btn-plan-action {
+      background: #ff6b6b;
+      color: white;
       font-size: 0.9rem;
+      padding: 0.5rem 1rem;
       border: none;
       border-radius: 6px;
       cursor: pointer;
       transition: background 0.2s ease;
-      margin-left: 1rem;
+      font-family: 'Poppins', sans-serif;
+      text-align: center;
+      text-decoration: none;
+      line-height: 1.4rem;
     }
-    .btn-cancel-plan:hover {
+    .btn-plan-action:hover {
       background: #e85c5c;
     }
-    .current-plan form {
-      display: inline;
-    }
     .error-message {
-      color: red;
+      color: #dc3545;
       font-weight: 500;
       margin-bottom: 1rem;
+      padding: 0.75rem;
+      background: #fde8e8;
+      border-radius: 6px;
     }
     .success-message {
-      color: green;
+      color: #28a745;
       font-weight: 500;
       margin-bottom: 1rem;
+      padding: 0.75rem;
+      background: #e8f5e9;
+      border-radius: 6px;
     }
   </style>
 </head>
@@ -214,10 +277,9 @@
 
 <div class="sidebar" id="sideBar">
   <a href="/purchase_program">Purchase Programs</a>
-  <a href="/plan_builder">Build Plan & Nutrition</a>
-  <a href="/plans">Find Plans</a>
-  <a href="/coordinate_nutrition">Coordinate Nutrition</a>
-  <a href="/class_registration">Register Classes</a>
+  <a href="/account_settings">Account Settings</a>
+  <a href="/about">About</a>
+  <a href="/logout">Logout</a>
 </div>
 
 <div class="container">
@@ -228,22 +290,39 @@
     <nav class="menu">
       <a href="#" class="active" onclick="showTab('settingsTab', this)">Account Settings</a>
       <a href="#" onclick="showTab('securityTab', this)">Security & Privacy</a>
-      <a href="#" onclick="showTab('applicationTab', this)">Application</a>
-      <a href="#" onclick="showTab('notificationTab', this)">Notification</a>
+      <a href="#" onclick="showTab('fitnessTab', this)">Fitness Profile</a>
+      <a href="#" onclick="showTab('nutritionTab', this)">Nutrition</a>
     </nav>
   </aside>
 
   <main>
     <div id="settingsTab" class="tab-content">
       <h1>Account Settings</h1>
-      <div class="current-plan">
-        Current Plan: <strong>{{ membershipPlan }}</strong>
-        <a href="/purchase_program" style="margin-left:1rem; color:#ff6b6b; text-decoration: underline;">Change Plan</a>
-        <form method="post" action="/update_plan">
-          <input type="hidden" name="plan" value="Free membership">
-          <button class="btn-cancel-plan" type="submit" onclick="return confirm('Are you sure you want to cancel your current plan?')">Cancel Plan</button>
-        </form>
+      <div class="info-box">
+        <h3>Membership Information</h3>
+        <div class="info-row">
+          <span class="info-label">Current Plan:</span>
+          <span class="info-value">{{ membershipPlan }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Personal Trainer:</span>
+          <span class="info-value">{{ trainer_name }}</span>
+        </div>
+        <div class="trainer-info">
+          <p class="trainer-status">Personal training services are coming soon! Stay tuned for updates.</p>
+        </div>
+        <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+          <form method="post" action="/update_plan">
+            <input type="hidden" name="plan" value="Free membership">
+            <button class="btn-plan-action" type="submit"
+              onclick="return confirm('Are you sure you want to cancel your current plan?')">
+              Cancel Plan
+            </button>
+          </form>
+          <a href="/purchase_program" class="btn-plan-action">Change Plan</a>
+        </div>
       </div>
+
       <form method="post" enctype="multipart/form-data">
         <div class="form-row">
           <div class="form-group">
@@ -267,6 +346,56 @@
         </div>
         <div class="form-row">
           <div class="form-group">
+            <label for="profile_picture">Update Profile Picture</label>
+            <input type="file" id="profile_picture" name="profile_picture">
+            <input type="hidden" name="existing_profile_picture" value="{{ profile_picture }}">
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn-update" type="submit">Update Profile</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="securityTab" class="tab-content" style="display:none;">
+      <h1>Security & Privacy</h1>
+      {% if password_error %}
+        <div class="error-message">{{ password_error }}</div>
+      {% endif %}
+      {% if mismatch_error %}
+        <div class="error-message">{{ mismatch_error }}</div>
+      {% endif %}
+      {% if success_message %}
+        <div class="success-message">{{ success_message }}</div>
+      {% endif %}
+      <form method="post" action="/update_password#securityTab">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="current_password">Current Password</label>
+            <input type="password" id="current_password" name="current_password" required>
+          </div>
+          <div class="form-group">
+            <label for="new_password">New Password</label>
+            <input type="password" id="new_password" name="new_password" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="confirm_password">Confirm Password</label>
+            <input type="password" id="confirm_password" name="confirm_password" required>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn-update" type="submit">Update Password</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="fitnessTab" class="tab-content" style="display:none;">
+      <h1>Fitness Profile</h1>
+      <form method="post">
+        <div class="form-row">
+          <div class="form-group">
             <label for="height_cm">Height (cm)</label>
             <input type="number" id="height_cm" name="height_cm" value="{{ height_cm }}">
           </div>
@@ -283,96 +412,51 @@
           <div class="form-group">
             <label for="gender">Gender</label>
             <select id="gender" name="gender">
-              <option value="" {% if not gender %}selected{% endif %}>Select</option>
+              <option value="">Select</option>
               <option value="male" {% if gender == 'male' %}selected{% endif %}>Male</option>
               <option value="female" {% if gender == 'female' %}selected{% endif %}>Female</option>
               <option value="other" {% if gender == 'other' %}selected{% endif %}>Other</option>
             </select>
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="profile_picture">Update Profile Picture</label>
-            <input type="file" id="profile_picture" name="profile_picture">
-            <input type="hidden" name="existing_profile_picture" value="{{ profile_picture }}">
-          </div>
+        <div class="form-group">
+          <label for="medical_conditions">Medical Conditions</label>
+          <textarea id="medical_conditions" name="medical_conditions">{{ medical_conditions }}</textarea>
         </div>
         <div class="actions">
-          <button class="btn-update" type="submit">Update</button>
+          <button class="btn-update" type="submit">Update Fitness Profile</button>
         </div>
       </form>
     </div>
 
-    <div id="securityTab" class="tab-content" style="display:none;">
-      <h1>Security & Privacy</h1>
-
-      {% if password_error %}
-        <div class="error-message">{{ password_error }}</div>
-      {% endif %}
-      {% if mismatch_error %}
-        <div class="error-message">{{ mismatch_error }}</div>
-      {% endif %}
-      {% if success_message %}
-        <div class="success-message">{{ success_message }}</div>
-      {% endif %}
-
-      <form method="post" action="/update_password">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="current_password">Current Password</label>
-            <input type="password" id="current_password" name="current_password" required>
-          </div>
-          <div class="form-group">
-            <label for="new_password">New Password</label>
-            <input type="password" id="new_password" name="new_password" required>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="confirm_password">Confirm Password</label>
-            <input type="password" id="confirm_password" name="confirm_password" required>
-          </div>
-          <div class="form-group"></div>
-        </div>
-        <div class="actions">
-          <button class="btn-update" type="submit">Update Password</button>
-        </div>
-      </form>
-    </div>
-
-    <div id="applicationTab" class="tab-content" style="display:none;">
-      <h1>Application Settings</h1>
-      <p>Coming soon...</p>
-    </div>
-
-    <div id="notificationTab" class="tab-content" style="display:none;">
-      <h1>Notification Settings</h1>
-      <p>Coming soon...</p>
+    <div id="nutritionTab" class="tab-content" style="display:none;">
+      <h1>Nutrition Preferences</h1>
+      <p>Nutrition-related information and preferences will appear here soon.</p>
     </div>
   </main>
 </div>
 
 <script>
-  const sidebar = document.getElementById('sideBar');
+  function showTab(tabId, el) {
+    const tabs = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => tab.style.display = 'none');
+    document.getElementById(tabId).style.display = 'block';
+
+    const menuLinks = document.querySelectorAll('.menu a');
+    menuLinks.forEach(link => link.classList.remove('active'));
+    el.classList.add('active');
+  }
+
   function toggleSidebar() {
+    const sidebar = document.getElementById('sideBar');
     sidebar.classList.toggle('active');
   }
-  document.addEventListener('click', function (event) {
-    const isClickInside = sidebar.contains(event.target) || event.target.classList.contains('hamburger');
-    if (!isClickInside) sidebar.classList.remove('active');
-  });
 
-  function showTab(tabId, element = null) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
-    document.getElementById(tabId).style.display = 'block';
-    document.querySelectorAll('.menu a').forEach(link => link.classList.remove('active'));
-    if (element) element.classList.add('active');
-  }
-
-  window.addEventListener("DOMContentLoaded", function () {
-    {% if active_tab %}
-      showTab("{{ active_tab }}");
-    {% endif %}
+  window.addEventListener('DOMContentLoaded', () => {
+    const hasSecurityMessage = document.querySelector('#securityTab .error-message, #securityTab .success-message');
+    if (hasSecurityMessage) {
+      showTab('securityTab', document.querySelector('.menu a:nth-child(2)'));
+    }
   });
 </script>
 
