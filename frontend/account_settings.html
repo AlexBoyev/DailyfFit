@@ -183,8 +183,8 @@
       cursor: pointer;
       border: none;
     }
-    .btn-update { 
-      background: #ff6b6b; 
+    .btn-update {
+      background: #ff6b6b;
       color: white;
       transition: background-color 0.2s;
     }
@@ -284,14 +284,12 @@
     <div class="logo">DailyFit</div>
   </div>
   <nav>
-    <a href="/dashboard">Dashboard</a>
     <a href="/about">About</a>
     <a href="/logout">Logout</a>
   </nav>
 </header>
 
 <div class="sidebar" id="sideBar">
-  <a href="/dashboard">Dashboard</a>
   <a href="/purchase_program">Purchase Programs</a>
   <a href="/account_settings">Account Settings</a>
   <a href="/about">About</a>
@@ -318,7 +316,7 @@
       </div>
 
       <h1>Account Settings</h1>
-      
+
       <div class="info-box">
         <h3>Membership Information</h3>
         <div class="info-row">
@@ -475,43 +473,28 @@
     </div>
 
     <div id="nutritionTab" class="tab-content" style="display:none;">
-      <h1>Nutrition Preferences</h1>
-      <p>Nutrition tracking and meal planning features are coming soon!</p>
-    </div>
+            <h1>Nutrition Preferences</h1>
+      <p>Nutrition-related information and preferences will appear here soon.</p>
+    </div> <!-- Close nutritionTab -->
+
   </main>
-</div>
+</div> <!-- Close container -->
 
 <script>
-  const sidebar = document.getElementById('sideBar');
-  
+  function showTab(tabId, el) {
+    const tabs = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => tab.style.display = 'none');
+    document.getElementById(tabId).style.display = 'block';
+
+    const menuLinks = document.querySelectorAll('.menu a');
+    menuLinks.forEach(link => link.classList.remove('active'));
+    el.classList.add('active');
+  }
+
   function toggleSidebar() {
+    const sidebar = document.getElementById('sideBar');
     sidebar.classList.toggle('active');
   }
-  
-  document.addEventListener('click', function (event) {
-    const isClickInside = sidebar.contains(event.target) || event.target.classList.contains('hamburger');
-    if (!isClickInside) sidebar.classList.remove('active');
-  });
-
-  function showTab(tabId, element = null) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.style.display = 'none');
-    document.getElementById(tabId).style.display = 'block';
-    document.querySelectorAll('.menu a').forEach(link => link.classList.remove('active'));
-    if (element) element.classList.add('active');
-  }
-
-  // Show welcome message for new users
-  window.addEventListener('DOMContentLoaded', function() {
-    const requiredFields = ['height_cm', 'weight_kg', 'age', 'gender', 'fitness_level'];
-    const isNewUser = requiredFields.some(field => !document.getElementById(field).value);
-    if (isNewUser) {
-      document.getElementById('welcomeMessage').style.display = 'block';
-    }
-  });
-
-  {% if active_tab %}
-    showTab("{{ active_tab }}");
-  {% endif %}
 </script>
 
 </body>
