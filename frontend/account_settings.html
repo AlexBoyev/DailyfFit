@@ -6,268 +6,97 @@
   <title>Account Settings — DailyFit</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #f7f8fa;
-      color: #333;
-      min-height: 100vh;
+    /* ---------- Base ---------- */
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Poppins',sans-serif;background:#f7f8fa;color:#333;min-height:100vh}
+
+    /* ---------- Header ---------- */
+    header{
+      height:60px;background:#121212;color:#fff;display:flex;align-items:center;
+      justify-content:space-between;padding:0 1.5rem;position:fixed;inset:0 0 auto 0;z-index:100
     }
-    header {
-      background: #121212;
-      color: white;
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
+    .hamburger{background:none;border:none;font-size:1.5rem;color:#fff;cursor:pointer}
+    nav a{color:#fff;margin-left:1.25rem;text-decoration:none}
+    nav a:hover{text-decoration:underline}
+
+    /* ---------- Mobile sidebar ---------- */
+    .sidebar{position:fixed;top:0;left:-250px;width:250px;height:100%;background:#fff;
+      padding-top:60px;box-shadow:2px 0 6px rgba(0,0,0,.1);transition:.3s;z-index:150}
+    .sidebar.active{left:0}
+    .sidebar a{display:block;padding:1rem;border-bottom:1px solid #eee;color:#333;text-decoration:none}
+    .sidebar a:hover{background:#f1f1f1}
+
+    /* ---------- Layout ---------- */
+    .container{display:flex;padding-top:60px;min-height:100vh}
+    aside{
+      width:260px;background:#fff;padding:2rem 1rem;box-shadow:2px 0 6px rgba(0,0,0,.1);
+      position:fixed;top:60px;bottom:0;overflow-y:auto
     }
-    .header-left {
-      display: flex;
-      align-items: center;
+    main{flex:1;margin-left:260px;padding:2rem}
+
+    /* ---------- Sidebar profile ---------- */
+    aside img{width:100px;height:100px;border-radius:50%;object-fit:cover;margin:0 auto 1rem}
+    aside h2{text-align:center;font-size:1.1rem;font-weight:600;margin-bottom:.25rem}
+    aside p{text-align:center;color:#777;font-size:.9rem;margin-bottom:1.25rem}
+
+    /* ---------- Sidebar menu ---------- */
+    .menu{display:flex;flex-direction:column;gap:.75rem}
+    .menu a{
+      background:#f1f1f1;color:#333;border-radius:8px;padding:.75rem 1rem;text-decoration:none;
+      transition:.2s
     }
-    .logo {
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin-left: 1rem;
+    .menu a.active,.menu a:hover{background:#ff6b6b;color:#fff}
+
+    /* ---------- Tabs ---------- */
+    .tab-content{
+      background:#fff;padding:2rem;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,.1)
     }
-    nav a {
-      color: white;
-      text-decoration: none;
-      margin-left: 1.5rem;
+    main h1{font-size:1.5rem;font-weight:600;margin-bottom:1.5rem}
+
+    /* ---------- Helpers ---------- */
+    .info-box{background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.08);margin-bottom:2rem}
+    .info-row{display:flex;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid #eee}
+    .info-row:last-child{border-bottom:none}
+    .info-label{color:#666;font-weight:500}
+    .info-value{font-weight:600}
+
+    .form-row{display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap}
+    .form-group{flex:1;min-width:200px;display:flex;flex-direction:column}
+    label{margin-bottom:.45rem;font-weight:500}
+    input,select,textarea{
+      border:1px solid #ccc;border-radius:6px;padding:.7rem;font:inherit;width:100%
     }
-    nav a:hover {
-      text-decoration: underline;
+    textarea{resize:vertical;min-height:100px}
+    .actions{margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap}
+    .btn-update,.btn-plan{background:#ff6b6b;color:#fff;border:none;padding:.7rem 1.4rem;
+      border-radius:6px;font:inherit;cursor:pointer;transition:.2s}
+    .btn-update:hover,.btn-plan:hover{background:#e85c5c}
+
+    .error-message,.success-message{
+      padding:.8rem;border-radius:6px;font-weight:500;margin-bottom:1rem
     }
-    .hamburger {
-      font-size: 1.5rem;
-      cursor: pointer;
-      background: none;
-      border: none;
-      color: white;
-    }
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: -250px;
-      width: 250px;
-      height: 100%;
-      background: #fff;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-      padding-top: 60px;
-      transition: 0.3s;
-      z-index: 1000;
-    }
-    .sidebar.active {
-      left: 0;
-    }
-    .sidebar a {
-      display: block;
-      padding: 1rem;
-      color: #333;
-      text-decoration: none;
-      border-bottom: 1px solid #eee;
-    }
-    .sidebar a:hover {
-      background: #f1f1f1;
-    }
-    .container {
-      display: flex;
-      padding-top: 60px;
-      min-height: 100vh;
-    }
-    aside {
-      width: 260px;
-      background: #fff;
-      padding: 2rem 1rem;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-      position: fixed;
-      top: 60px;
-      bottom: 0;
-      overflow-y: auto;
-    }
-    aside img {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin: 0 auto 1rem;
-      display: block;
-    }
-    aside h2 {
-      text-align: center;
-      font-size: 1.2rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-    aside p {
-      text-align: center;
-      color: #888;
-      font-size: 0.9rem;
-      margin-bottom: 1.5rem;
-    }
-    .menu {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    .menu a {
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      text-decoration: none;
-      color: #333;
-      background: #f1f1f1;
-      transition: 0.2s;
-    }
-    .menu a.active, .menu a:hover {
-      background: #ff6b6b;
-      color: white;
-    }
-    main {
-      flex: 1;
-      margin-left: 260px;
-      padding: 2rem;
-    }
-    main h1 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-    }
-    .tab-content {
-      background: #fff;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .info-box {
-      background: #fff;
-      padding: 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-bottom: 2rem;
-    }
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem 0;
-      border-bottom: 1px solid #eee;
-    }
-    .info-row:last-child {
-      border-bottom: none;
-    }
-    .info-label {
-      color: #666;
-      font-weight: 500;
-    }
-    .info-value {
-      color: #333;
-      font-weight: 600;
-    }
-    .trainer-info {
-      background: #f8f9fa;
-      padding: 1rem;
-      border-radius: 6px;
-      margin-top: 1rem;
-    }
-    .trainer-status {
-      color: #666;
-      font-style: italic;
-    }
-    .form-row {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    .form-group {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-    label {
-      font-weight: 500;
-      margin-bottom: 0.5rem;
-    }
-    input, select, textarea {
-      padding: 0.75rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 1rem;
-      width: 100%;
-    }
-    textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
-    .actions {
-      margin-top: 2rem;
-      display: flex;
-      gap: 1rem;
-    }
-    .actions button, .actions a {
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      border: none;
-      text-align: center;
-      text-decoration: none;
-      font-family: 'Poppins', sans-serif;
-      line-height: 1.2;
-    }
-    .btn-update {
-      background: #ff6b6b;
-      color: white;
-      transition: background-color 0.2s;
-    }
-    .btn-update:hover {
-      background: #ff5252;
-    }
-    .btn-plan-action {
-      background: #ff6b6b;
-      color: white;
-      font-size: 0.9rem;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.2s ease;
-      font-family: 'Poppins', sans-serif;
-      text-align: center;
-      text-decoration: none;
-      line-height: 1.4rem;
-    }
-    .btn-plan-action:hover {
-      background: #e85c5c;
-    }
-    .error-message {
-      color: #dc3545;
-      font-weight: 500;
-      margin-bottom: 1rem;
-      padding: 0.75rem;
-      background: #fde8e8;
-      border-radius: 6px;
-    }
-    .success-message {
-      color: #28a745;
-      font-weight: 500;
-      margin-bottom: 1rem;
-      padding: 0.75rem;
-      background: #e8f5e9;
-      border-radius: 6px;
-    }
+    .error-message{background:#fde8e8;color:#c82333}
+    .success-message{background:#e9f7ef;color:#218838}
+
+    /* ---------- Nutrition extras ---------- */
+    .macro-grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+    .log-table{width:100%;border-collapse:collapse;font-size:.95rem;margin-top:1.25rem}
+    .log-table th,.log-table td{border:1px solid #eee;padding:.6rem;text-align:left}
+    .log-table th{background:#f1f1f1;font-weight:600}
+    .log-table tr:nth-child(even) td{background:#fafafa}
+    .log-table th:last-child,.log-table td:last-child{width:40px;text-align:center}
+    .delete-btn{background:#ff6b6b;border:none;color:#fff;font-weight:bold;
+      border-radius:4px;padding:.25rem .55rem;cursor:pointer;line-height:1}
+    .delete-btn:hover{background:#e85c5c}
   </style>
 </head>
 <body>
 
+<!-- ---------- Header ---------- -->
 <header>
-  <div class="header-left">
+  <div style="display:flex;align-items:center">
     <button class="hamburger" onclick="toggleSidebar()">☰</button>
-    <div class="logo">DailyFit</div>
+    <span style="margin-left:1rem;font-size:1.2rem;font-weight:600">DailyFit</span>
   </div>
   <nav>
     <a href="/about">About</a>
@@ -275,186 +104,205 @@
   </nav>
 </header>
 
-<div class="sidebar" id="sideBar">
+<!-- ---------- Mobile sidebar ---------- -->
+<div class="sidebar" id="mobileNav">
   <a href="/purchase_program">Purchase Programs</a>
-  <a href="/account_settings">Account Settings</a>
-  <a href="/about">About</a>
-  <a href="/logout">Logout</a>
+  <a href="/class_registration">Register Classes</a>
+  <a href="/personal_trainer">Personal trainer</a>
 </div>
 
+
+<!-- ---------- Main layout ---------- -->
 <div class="container">
+
+  <!-- ----- Sidebar ----- -->
   <aside>
-    <img src="/images/uploads/{{ profile_picture or 'default-profile.png' }}" alt="Profile Picture">
+    <img src="/images/uploads/{{ profile_picture|default('default-profile.png') }}" alt="Profile">
     <h2>{{ name }}</h2>
     <p>{{ email }}</p>
+
     <nav class="menu">
-      <a href="#" class="active" onclick="showTab('settingsTab', this)">Account Settings</a>
-      <a href="#" onclick="showTab('securityTab', this)">Security & Privacy</a>
-      <a href="#" onclick="showTab('fitnessTab', this)">Fitness Profile</a>
-      <a href="#" onclick="showTab('nutritionTab', this)">Nutrition</a>
+      <a href="#" class="active" onclick="showTab('settingsTab',this)">Account Settings</a>
+      <a href="#" onclick="showTab('securityTab',this)">Security &amp; Privacy</a>
+      <a href="#" onclick="showTab('fitnessTab',this)">Fitness Profile</a>
+      <a href="#" onclick="showTab('nutritionTab',this)">Nutrition</a>
     </nav>
   </aside>
 
+  <!-- ----- Content ----- -->
   <main>
+
+    <!-- ========== Account Settings ========== -->
     <div id="settingsTab" class="tab-content">
       <h1>Account Settings</h1>
+
       <div class="info-box">
-        <h3>Membership Information</h3>
-        <div class="info-row">
-          <span class="info-label">Current Plan:</span>
-          <span class="info-value">{{ membershipPlan }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Personal Trainer:</span>
-          <span class="info-value">{{ trainer_name }}</span>
-        </div>
-        <div class="trainer-info">
-          <p class="trainer-status">Personal training services are coming soon! Stay tuned for updates.</p>
-        </div>
-        <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+        <h3>Membership</h3>
+        <div class="info-row"><span class="info-label">Current Plan:</span><span class="info-value">{{ membership_plan }}</span></div>
+        <div class="info-row"><span class="info-label">Personal Trainer:</span><span class="info-value">{{ trainer_name }}</span></div>
+        <div style="margin-top:1rem;display:flex;gap:1rem">
           <form method="post" action="/update_plan">
             <input type="hidden" name="plan" value="Free membership">
-            <button class="btn-plan-action" type="submit"
-              onclick="return confirm('Are you sure you want to cancel your current plan?')">
-              Cancel Plan
-            </button>
+            <button class="btn-plan" onclick="return confirm('Cancel current plan?')" type="submit">Cancel Plan</button>
           </form>
-          <a href="/purchase_program" class="btn-plan-action">Change Plan</a>
+          <a class="btn-plan" href="/purchase_program">Change Plan</a>
         </div>
       </div>
 
       <form method="post" enctype="multipart/form-data">
         <div class="form-row">
-          <div class="form-group">
-            <label for="name">Full Name</label>
-            <input type="text" id="name" name="name" value="{{ name }}">
-          </div>
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" value="{{ email }}">
-          </div>
+          <div class="form-group"><label for="name">Full Name</label><input id="name" name="name" value="{{ name }}"></div>
+          <div class="form-group"><label for="email">Email</label><input id="email" name="email" type="email" value="{{ email }}"></div>
         </div>
         <div class="form-row">
-          <div class="form-group">
-            <label for="phone">Phone</label>
-            <input type="text" id="phone" name="phone" value="{{ phone }}">
-          </div>
-          <div class="form-group">
-            <label for="address">Address</label>
-            <input type="text" id="address" name="address" value="{{ address }}">
-          </div>
+          <div class="form-group"><label for="phone">Phone</label><input id="phone" name="phone" value="{{ phone }}"></div>
+          <div class="form-group"><label for="address">Address</label><input id="address" name="address" value="{{ address }}"></div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="profile_picture">Update Profile Picture</label>
-            <input type="file" id="profile_picture" name="profile_picture">
-            <input type="hidden" name="existing_profile_picture" value="{{ profile_picture }}">
-          </div>
-        </div>
-        <div class="actions">
-          <button class="btn-update" type="submit">Update Profile</button>
-        </div>
+        <div class="form-group"><label for="profile_picture">Update Profile Picture</label><input id="profile_picture" type="file" name="profile_picture"></div>
+        <div class="actions"><button class="btn-update" type="submit">Update Profile</button></div>
       </form>
     </div>
 
-    <div id="securityTab" class="tab-content" style="display:none;">
-      <h1>Security & Privacy</h1>
-      {% if password_error %}
-        <div class="error-message">{{ password_error }}</div>
-      {% endif %}
-      {% if mismatch_error %}
-        <div class="error-message">{{ mismatch_error }}</div>
-      {% endif %}
-      {% if success_message %}
-        <div class="success-message">{{ success_message }}</div>
-      {% endif %}
+    <!-- ========== Security & Privacy ========== -->
+    <div id="securityTab" class="tab-content" style="display:none">
+      <h1>Security &amp; Privacy</h1>
+
+      {% if password_error %}<div class="error-message">{{ password_error }}</div>{% endif %}
+      {% if mismatch_error %}<div class="error-message">{{ mismatch_error }}</div>{% endif %}
+      {% if success_message %}<div class="success-message">{{ success_message }}</div>{% endif %}
+
       <form method="post" action="/update_password#securityTab">
         <div class="form-row">
-          <div class="form-group">
-            <label for="current_password">Current Password</label>
-            <input type="password" id="current_password" name="current_password" required>
-          </div>
-          <div class="form-group">
-            <label for="new_password">New Password</label>
-            <input type="password" id="new_password" name="new_password" required>
-          </div>
+          <div class="form-group"><label for="current_password">Current Password</label><input id="current_password" name="current_password" type="password" required></div>
+          <div class="form-group"><label for="new_password">New Password</label><input id="new_password" name="new_password" type="password" required></div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="confirm_password">Confirm Password</label>
-            <input type="password" id="confirm_password" name="confirm_password" required>
-          </div>
-        </div>
-        <div class="actions">
-          <button class="btn-update" type="submit">Update Password</button>
-        </div>
+        <div class="form-group"><label for="confirm_password">Confirm Password</label><input id="confirm_password" name="confirm_password" type="password" required></div>
+        <div class="actions"><button class="btn-update" type="submit">Update Password</button></div>
       </form>
     </div>
 
-    <div id="fitnessTab" class="tab-content" style="display:none;">
+    <!-- ========== Fitness Profile ========== -->
+    <div id="fitnessTab" class="tab-content" style="display:none">
       <h1>Fitness Profile</h1>
       <form method="post">
         <div class="form-row">
-          <div class="form-group">
-            <label for="height_cm">Height (cm)</label>
-            <input type="number" id="height_cm" name="height_cm" value="{{ height_cm }}">
-          </div>
-          <div class="form-group">
-            <label for="weight_kg">Weight (kg)</label>
-            <input type="number" id="weight_kg" name="weight_kg" value="{{ weight_kg }}">
-          </div>
+          <div class="form-group"><label for="height_cm">Height (cm)</label><input id="height_cm" name="height_cm" type="number" value="{{ height_cm }}"></div>
+          <div class="form-group"><label for="weight_kg">Weight (kg)</label><input id="weight_kg" name="weight_kg" type="number" value="{{ weight_kg }}"></div>
         </div>
         <div class="form-row">
-          <div class="form-group">
-            <label for="age">Age</label>
-            <input type="number" id="age" name="age" value="{{ age }}">
-          </div>
+          <div class="form-group"><label for="age">Age</label><input id="age" name="age" type="number" value="{{ age }}"></div>
           <div class="form-group">
             <label for="gender">Gender</label>
             <select id="gender" name="gender">
               <option value="">Select</option>
-              <option value="male" {% if gender == 'male' %}selected{% endif %}>Male</option>
-              <option value="female" {% if gender == 'female' %}selected{% endif %}>Female</option>
-              <option value="other" {% if gender == 'other' %}selected{% endif %}>Other</option>
+              <option value="male"   {% if gender=='male' %}selected{% endif %}>Male</option>
+              <option value="female" {% if gender=='female' %}selected{% endif %}>Female</option>
+              <option value="other"  {% if gender=='other' %}selected{% endif %}>Other</option>
             </select>
           </div>
         </div>
-        <div class="form-group">
-          <label for="medical_conditions">Medical Conditions</label>
-          <textarea id="medical_conditions" name="medical_conditions">{{ medical_conditions }}</textarea>
-        </div>
-        <div class="actions">
-          <button class="btn-update" type="submit">Update Fitness Profile</button>
-        </div>
+        <div class="form-group"><label for="medical_conditions">Medical Conditions</label><textarea id="medical_conditions" name="medical_conditions">{{ medical_conditions }}</textarea></div>
+        <div class="actions"><button class="btn-update" type="submit">Update Fitness Profile</button></div>
       </form>
     </div>
 
-    <div id="nutritionTab" class="tab-content" style="display:none;">
-      <h1>Nutrition Preferences</h1>
-      <p>Nutrition-related information and preferences will appear here soon.</p>
-    </div>
+    <!-- ========== Nutrition (Log) ========== -->
+    <div id="nutritionTab" class="tab-content" style="display:none">
+      <h1>Nutrition Log</h1>
+
+      <!-- Entry form -->
+      <form method="post" action="/add_nutrition_log">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date">Date</label>
+            <input id="date" name="date" type="date" required>
+          </div>
+          <div class="form-group">
+            <label for="meal_type">Meal Type</label>
+            <select id="meal_type" name="meal_type" required>
+              <option value="">Select</option>
+              <option value="breakfast">Breakfast</option>
+              <option value="lunch">Lunch</option>
+              <option value="dinner">Dinner</option>
+              <option value="snack">Snack</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row macro-grid">
+          <div class="form-group"><label for="calories">Calories</label><input id="calories" name="calories" type="number" required></div>
+          <div class="form-group"><label for="protein_grams">Protein (g)</label><input id="protein_grams" name="protein_grams" type="number" required></div>
+          <div class="form-group"><label for="carbs_grams">Carbs (g)</label><input id="carbs_grams" name="carbs_grams" type="number" required></div>
+          <div class="form-group"><label for="fat_grams">Fats (g)</label><input id="fat_grams" name="fat_grams" type="number" required></div>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notes</label>
+          <textarea id="notes" name="notes" placeholder="Comments, ingredients, etc."></textarea>
+        </div>
+
+        <div class="actions"><button class="btn-update" type="submit">Add Log</button></div>
+      </form>
+
+      <!-- Log history -->
+      {% if nutrition_logs is defined and nutrition_logs %}
+        <h3 style="margin-top:2rem">Your Recent Logs</h3>
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>Date</th><th>Meal</th><th>Calories</th>
+              <th>Protein</th><th>Carbs</th><th>Fats</th><th>Notes</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in nutrition_logs %}
+              <tr>
+                <td>{{ log.date }}</td>
+                <td>{{ log.meal_type|capitalize }}</td>
+                <td>{{ log.calories }}</td>
+                <td>{{ log.protein_grams }} g</td>
+                <td>{{ log.carbs_grams }} g</td>
+                <td>{{ log.fat_grams }} g</td>
+                <td style="max-width:250px">{{ log.notes }}</td>
+                <td>
+                  <form method="post"
+                        action="/delete_nutrition_log/{{ log.id }}"
+                        onsubmit="return confirm('Delete this entry?');">
+                    <button class="delete-btn" title="Delete">✕</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p style="margin-top:1.25rem">No logs yet. Start adding meals above!</p>
+      {% endif %}
+    </div><!-- /nutritionTab -->
+
   </main>
 </div>
 
+<!-- ---------- Scripts ---------- -->
 <script>
-  function showTab(tabId, el) {
-    const tabs = document.querySelectorAll('.tab-content');
-    tabs.forEach(tab => tab.style.display = 'none');
-    document.getElementById(tabId).style.display = 'block';
-
-    const menuLinks = document.querySelectorAll('.menu a');
-    menuLinks.forEach(link => link.classList.remove('active'));
-    el.classList.add('active');
+  function showTab(id, link){
+    document.querySelectorAll('.tab-content').forEach(t=>t.style.display='none');
+    document.getElementById(id).style.display='block';
+    document.querySelectorAll('.menu a').forEach(a=>a.classList.remove('active'));
+    link.classList.add('active');
   }
-
-  function toggleSidebar() {
-    const sidebar = document.getElementById('sideBar');
-    sidebar.classList.toggle('active');
-  }
+  function toggleSidebar(){document.getElementById('mobileNav').classList.toggle('active')}
 
   window.addEventListener('DOMContentLoaded', () => {
-    const hasSecurityMessage = document.querySelector('#securityTab .error-message, #securityTab .success-message');
-    if (hasSecurityMessage) {
+    const params = new URLSearchParams(window.location.search);
+    const urlTab = params.get('tab');           // e.g. nutrition
+    if (urlTab) {
+      const tabId = `${urlTab}Tab`;             // nutritionTab
+      const link  = document.querySelector(`.menu a[onclick*="${tabId}"]`);
+      if (link) showTab(tabId, link);
+    }
+
+    if (document.querySelector('#securityTab .error-message,.success-message')) {
       showTab('securityTab', document.querySelector('.menu a:nth-child(2)'));
     }
   });

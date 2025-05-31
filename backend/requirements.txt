@@ -7,3 +7,4 @@ python-jose[cryptography]
 fastapi[all]
 jinja2
 requests
+

@@ -1,91 +1,178 @@
+"""
+backend/main.py – DailyFit Gym backend
+• Public pages: index, about, login, register, chatbot
+• Protected pages: dashboard, purchase_program, account_settings
+• Nutrition logs
+• Membership plan update
+• Class registration (current + next week) with per-date capacity
+"""
+
 import os
 import requests
 from pathlib import Path
-from fastapi import FastAPI, Request, status, HTTPException, Form, UploadFile, File
+from datetime import datetime, date, timedelta
+from dotenv import load_dotenv
+import uvicorn
+
+from fastapi import (
+    FastAPI, Request, Form, HTTPException, UploadFile, File,
+    status, Path as FPath
+)
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from jose import jwt, JWTError
-from dotenv import load_dotenv
-import uvicorn
-from services import UserService
+
+from services import UserService, ClassService
 from chatbot import get_bot_response
-from docker_manager import is_docker_running, is_container_running, initialize_docker, ensure_schema_loaded
+from database import get_connection
+from docker_manager import (
+    is_docker_running, is_container_running,
+    initialize_docker, ensure_schema_loaded
+)
 
-# ─── Load configuration ───────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────
+# 1. ENV / CONFIG
+# ────────────────────────────────────────────────────────────────────
 load_dotenv()
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
-CAPTCHA_ENABLED = os.getenv("CAPTCHA_ENABLED", "true").lower() == "true"
-RECAPTCHA_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
-SITE_KEY = os.getenv("SITE_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey")
+ALGORITHM  = os.getenv("ALGORITHM", "HS256")
 
+CAPTCHA_ON = os.getenv("CAPTCHA_ENABLED", "true").lower() == "true"
+RECAPTCHA_SK = os.getenv("RECAPTCHA_SECRET_KEY", "")
+SITE_KEY = os.getenv("SITE_KEY", "")
 
-def initialize_application():
-    # Check if Docker is running
+# ────────────────────────────────────────────────────────────────────
+# 2. Docker-based DB container bootstrap (optional helper)
+# ────────────────────────────────────────────────────────────────────
+def init_app() -> bool:
     if not is_docker_running():
-        print("Error: Docker is not running. Please start Docker and try again.")
+        print("Docker is not running. Start Docker and try again.")
         return False
-
-    # Check if container is already running
     if not is_container_running():
-        print("Initializing Docker container...")
-        if not initialize_docker():
+        print("Starting DB container & loading schema …")
+        if not initialize_docker() or not ensure_schema_loaded():
             return False
-
-        print("Loading database schema...")
-        if not ensure_schema_loaded():
-            return False
-
     return True
 
-
-# Initialize application
-if not initialize_application():
-    print("Application initialization failed. Exiting.")
+if not init_app():
     exit(1)
 
-# ─── Paths & Static mounts ────────────────────────────────────────────────────
-BASE_DIR = Path(__file__).resolve().parent
-FRONTEND_DIR = BASE_DIR.parent / "frontend"
-UPLOADS_DIR = FRONTEND_DIR / "images" / "uploads"
-UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+# ────────────────────────────────────────────────────────────────────
+# 3. Paths & FastAPI boilerplate
+# ────────────────────────────────────────────────────────────────────
+BASE = Path(__file__).resolve().parent
+WEB  = BASE.parent / "frontend"
+UPLOAD_DIR = WEB / "images" / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(debug=True)
-app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
-app.mount("/images", StaticFiles(directory=str(FRONTEND_DIR / "images")), name="images")
+app.mount("/static", StaticFiles(directory=str(WEB)), name="static")
+app.mount("/images", StaticFiles(directory=str(WEB / "images")), name="images")
+templates = Jinja2Templates(directory=str(WEB))
 
-templates = Jinja2Templates(directory=str(FRONTEND_DIR))
-
-
-# ─── Utility: reCAPTCHA check ─────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────
+# 4. Helpers
+# ────────────────────────────────────────────────────────────────────
 def verify_recaptcha(token: str) -> bool:
-    if not CAPTCHA_ENABLED:
+    if not CAPTCHA_ON:
         return True
     try:
         r = requests.post(
             "https://www.google.com/recaptcha/api/siteverify",
-            data={"secret": RECAPTCHA_KEY, "response": token},
+            data={"secret": RECAPTCHA_SK, "response": token},
             timeout=5
         )
         return r.json().get("success", False)
     except:
         return False
 
+def jwt_email(token: str | None) -> str | None:
+    if not token:
+        return None
+    try:
+        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])["sub"]
+    except JWTError:
+        return None
 
-# ─── Public routes ────────────────────────────────────────────────────────────
-@app.get("/", response_class=HTMLResponse)
+# ────────────────────────────────────────────────────────────────────
+# 5. Public routes
+# ────────────────────────────────────────────────────────────────────
+@app.get("/",  response_class=HTMLResponse)
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-
-@app.get("/login", response_class=HTMLResponse)
-def login_get(request: Request):
+@app.get("/about", response_class=HTMLResponse)
+def about(request: Request):
     return templates.TemplateResponse(
-        "login.html",
-        {"request": request, "site_key": SITE_KEY, "captcha_enabled": CAPTCHA_ENABLED}
+        "about.html",
+        {"request": request, "is_logged_in": bool(jwt_email(request.cookies.get("token")))}
     )
 
+@app.get("/login", response_class=HTMLResponse)
+def login_page(request: Request):
+    return templates.TemplateResponse(
+        "login.html",
+        {"request": request, "site_key": SITE_KEY, "captcha_enabled": CAPTCHA_ON}
+    )
+
+@app.post("/account_settings")
+async def update_account_settings(
+        request: Request,
+        # ---------- shared basic fields ----------
+        name: str | None = Form(None),
+        email: str | None = Form(None),
+        phone: str | None = Form(None),
+        address: str | None = Form(None),
+        # ---------- profile-pic ----------
+        profile_picture: UploadFile | None = File(None),
+        existing_profile_picture: str | None = Form(None),
+        # ---------- fitness ----------
+        height_cm: int | None = Form(None),
+        weight_kg: int | None = Form(None),
+        age: int | None = Form(None),
+        gender: str | None = Form(None),
+        medical_conditions: str | None = Form(None),
+        preferred_training_time: str | None = Form(None),
+        fitness_level: str | None = Form(None),
+):
+    """
+    Handles *both* forms:
+      • If height / weight are present ⇒ fitness panel
+      • Else ⇒ basic profile panel
+    """
+    usvc = UserService()
+
+    # ---------- which tab? ----------
+    is_fitness = height_cm is not None or weight_kg is not None \
+                 or age is not None
+
+    # ---------- figure out profile-picture filename ----------
+    filename = existing_profile_picture
+    if profile_picture and profile_picture.filename:
+        filename = f"{email}_profile.png"
+        file_path = WEB / "images" / "uploads" / filename
+        with open(file_path, "wb") as f:
+            f.write(await profile_picture.read())
+
+    # ---------- update DB ----------
+    if is_fitness:
+        usvc.update_user_profile(
+            request, None, None, None, None,
+            height_cm, weight_kg, age, gender,
+            filename, fitness_level, medical_conditions,
+            preferred_training_time
+        )
+        dest = "/account_settings?tab=fitness"
+    else:
+        usvc.update_user_profile(
+            request, name, email, phone, address,
+            None, None, None, None,
+            filename, None, None, None
+        )
+        dest = "/account_settings"
+
+    return RedirectResponse(dest, status_code=303)
 
 @app.post("/login")
 async def login_post(request: Request):
@@ -94,9 +181,9 @@ async def login_post(request: Request):
         raise HTTPException(status_code=403, detail="CAPTCHA failed")
     result = UserService().login(data["email"], data["password"])
     resp = JSONResponse(content=result)
-    resp.set_cookie("token", result["token"], httponly=True, samesite="Lax", secure=False, path="/")
+    resp.set_cookie("token", result["token"], httponly=True,
+                    samesite="Lax", secure=False, path="/")
     return resp
-
 
 @app.get("/logout")
 def logout():
@@ -104,145 +191,155 @@ def logout():
     resp.delete_cookie("token", path="/")
     return resp
 
-
 @app.get("/register", response_class=HTMLResponse)
 def register_get(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
 
-
 @app.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_post(request: Request):
-    data = await request.json()
-    return UserService().register_user(data)
+    return UserService().register_user(await request.json())
 
-
-@app.get("/about", response_class=HTMLResponse)
-def about(request: Request):
-    token = request.cookies.get("token")
-    is_logged_in = False
-    try:
-        if token:
-            jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            is_logged_in = True
-    except JWTError:
-        pass
-    return templates.TemplateResponse("about.html", {"request": request, "is_logged_in": is_logged_in})
-
-
-# ─── Chatbot API ───────────────────────────────────────────────────────────────
 @app.post("/api/chat")
 async def chat_api(request: Request):
-    data = await request.json()
-    reply = get_bot_response(data.get("message", ""))
-    return {"reply": reply}
+    msg = (await request.json()).get("message", "")
+    return {"reply": get_bot_response(msg)}
 
+# ────────────────────────────────────────────────────────────────────
+# 6. Auth middleware
+# ────────────────────────────────────────────────────────────────────
+PROTECTED = {
+    "/dashboard", "/purchase_program",
+    "/account_settings", "/class_registration",
+    "/update_plan", "/register_class", "/unregister_class"
+}
 
-# ─── Auth middleware for protected pages ──────────────────────────────────────
 @app.middleware("http")
-async def auth_middleware(request: Request, call_next):
-    protected_paths = ("/dashboard", "/purchase_program", "/account_settings")
-    if request.url.path in protected_paths:
-        token = request.cookies.get("token")
-        if not token:
-            return RedirectResponse("/login", status_code=302)
-        try:
-            jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        except JWTError:
-            resp = RedirectResponse("/login", status_code=302)
-            resp.delete_cookie("token", path="/")
-            return resp
+async def auth_guard(request: Request, call_next):
+    if request.url.path in PROTECTED:
+        if not jwt_email(request.cookies.get("token")):
+            return RedirectResponse("/login", 302)
     return await call_next(request)
 
-
-# ─── Protected routes ─────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────────────
+# 7. Dashboard & purchase program
+# ────────────────────────────────────────────────────────────────────
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request})
-
 
 @app.get("/purchase_program", response_class=HTMLResponse)
 def purchase_program(request: Request):
     return templates.TemplateResponse("purchase_program.html", {"request": request})
 
-
+# ────────────────────────────────────────────────────────────────────
+# 8. Account settings  (nutrition + membership)
+# ────────────────────────────────────────────────────────────────────
 @app.get("/account_settings", response_class=HTMLResponse)
 def account_settings(request: Request):
-    user_data = UserService().get_user_data_from_request(request)
-    return templates.TemplateResponse("account_settings.html", {"request": request, **user_data})
+    ctx = UserService().get_user_data_from_request(request)
+    email = ctx.get("email")
+    nutrition_logs = []
+    if email:
+        conn = get_connection(); cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT id FROM Users WHERE email=%s", (email,))
+        uid = cur.fetchone()["id"]
+        cur.execute("""
+            SELECT id,date,meal_type,calories,protein_grams,
+                   carbs_grams,fat_grams,notes
+              FROM NutritionLogs
+             WHERE user_id=%s
+          ORDER BY date DESC, created_at DESC
+             LIMIT 30
+        """, (uid,))
+        nutrition_logs = cur.fetchall()
+        cur.close(); conn.close()
+    return templates.TemplateResponse(
+        "account_settings.html",
+        {"request": request, **ctx, "nutrition_logs": nutrition_logs}
+    )
 
+@app.post("/add_nutrition_log")
+async def add_nutrition_log(
+        request: Request,
+        date: str          = Form(...),
+        meal_type: str     = Form(...),
+        calories: int      = Form(...),
+        protein_grams: int = Form(...),
+        carbs_grams: int   = Form(...),
+        fat_grams: int     = Form(...),
+        notes: str         = Form("")
+):
+    email = jwt_email(request.cookies.get("token"))
+    if not email:
+        return RedirectResponse("/login", 302)
+    conn = get_connection(); cur = conn.cursor()
+    cur.execute("SELECT id FROM Users WHERE email=%s", (email,))
+    uid = cur.fetchone()[0]
+    cur.execute("""
+        INSERT INTO NutritionLogs
+            (user_id,date,meal_type,calories,
+             protein_grams,carbs_grams,fat_grams,notes)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+    """, (uid, date, meal_type, calories,
+          protein_grams, carbs_grams, fat_grams, notes))
+    conn.commit(); cur.close(); conn.close()
+    return RedirectResponse("/account_settings?tab=nutrition", 303)
+
+@app.post("/delete_nutrition_log/{log_id}")
+def delete_log(request: Request, log_id: int = FPath(...)):
+    email = jwt_email(request.cookies.get("token"))
+    if not email:
+        return RedirectResponse("/login", 302)
+    conn = get_connection(); cur = conn.cursor()
+    cur.execute("""
+        DELETE NL FROM NutritionLogs NL
+        JOIN Users U ON NL.user_id = U.id
+        WHERE NL.id=%s AND U.email=%s
+    """, (log_id, email))
+    conn.commit(); cur.close(); conn.close()
+    return RedirectResponse("/account_settings?tab=nutrition", 303)
 
 @app.post("/update_plan")
-async def update_plan(request: Request, plan: str = Form(...)):
+def update_plan(request: Request, plan: str = Form(...)):
     UserService().update_plan(request, plan)
-    return RedirectResponse("/account_settings", status_code=303)
+    return RedirectResponse("/account_settings?plan_updated=1", 303)
 
+# ────────────────────────────────────────────────────────────────────
+# 9. Class registration (weekly)
+# ────────────────────────────────────────────────────────────────────
+cls = ClassService()
 
-@app.post("/update_password")
-async def update_password(
-        request: Request,
-        current_password: str = Form(...),
-        new_password: str = Form(...),
-        confirm_password: str = Form(...)
-):
-    template_data = {"request": request}
+@app.get("/class_registration", response_class=HTMLResponse)
+def class_registration(request: Request):
+    rows = cls.upcoming_two_weeks(request)
+    return templates.TemplateResponse("class_registration.html",
+        {"request": request, "rows": rows, "is_logged_in": True})
 
-    if new_password != confirm_password:
-        template_data["mismatch_error"] = "Passwords do not match"
-        user_data = UserService().get_user_data_from_request(request)
-        return templates.TemplateResponse("account_settings.html",
-                                          {**template_data, **user_data, "active_tab": "securityTab"})
-
+@app.post("/register_class/{class_id}")
+def register_class(request: Request,
+                   class_id: int = FPath(...),
+                   date: str = Form(...)):
+    uid = cls._user_id(request)
+    if not uid:
+        return RedirectResponse("/login", 302)
     try:
-        UserService().update_password(request, current_password, new_password)
-    except HTTPException as e:
-        if e.status_code == 403:
-            template_data["password_error"] = "Current password is incorrect"
-            user_data = UserService().get_user_data_from_request(request)
-            return templates.TemplateResponse("account_settings.html",
-                                              {**template_data, **user_data, "active_tab": "securityTab"})
-        else:
-            raise
+        cls.register(uid, class_id, date)
+    except ValueError:
+        pass                                   # class full
+    return RedirectResponse("/class_registration", 303)
 
-    user_data = UserService().get_user_data_from_request(request)
-    return templates.TemplateResponse("account_settings.html", {**template_data, **user_data,
-                                                                "success_message": "Password updated successfully.",
-                                                                "active_tab": "securityTab"})
+@app.post("/unregister_class/{class_id}")
+def unregister_class(request: Request,
+                     class_id: int = FPath(...),
+                     date: str = Form(...)):
+    uid = cls._user_id(request)
+    if not uid:
+        return RedirectResponse("/login", 302)
+    cls.cancel(uid, class_id, date)
+    return RedirectResponse("/class_registration", 303)
 
-
-@app.post("/account_settings")
-async def update_account_settings(
-        request: Request,
-        name: str = Form(None),
-        email: str = Form(None),
-        phone: str = Form(None),
-        address: str = Form(None),
-        height_cm: int = Form(None),
-        weight_kg: int = Form(None),
-        age: int = Form(None),
-        gender: str = Form(None),
-        fitness_level: str = Form(None),
-        medical_conditions: str = Form(None),
-        preferred_training_time: str = Form(None),
-        profile_picture: UploadFile = File(None),
-        existing_profile_picture: str = Form(None)
-):
-    filename = None
-
-    if profile_picture and profile_picture.filename:
-        filename = f"{email}_profile.png"
-        file_path = UPLOADS_DIR / filename
-        with open(file_path, "wb") as f:
-            f.write(await profile_picture.read())
-    else:
-        filename = existing_profile_picture  # ⬅️ fallback to previous picture if no new one
-
-    UserService().update_user_profile(
-        request, name, email, phone, address,
-        height_cm, weight_kg, age, gender, filename,
-        fitness_level, medical_conditions, preferred_training_time
-    )
-    return RedirectResponse("/account_settings", status_code=303)
-
-
+# ────────────────────────────────────────────────────────────────────
+# 10. Dev entry-point
+# ────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     uvicorn.run("backend.main:app", host="127.0.0.1", port=8001, reload=True)

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Class Registration — DailyFit</title>
+
+  <!-- Fonts & colours -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --primary:#ff6b6b;
+      --dark-bg:#121212;
+      --text-light:#f9f9f9;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Poppins',sans-serif;background:#f5f5f5}
+    /* Header */
+    header{
+      position:fixed;top:0;left:0;width:100%;height:70px;
+      background:var(--dark-bg);color:var(--text-light);
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 2rem;z-index:1000
+    }
+    .menu-btn{background:none;border:none;color:var(--text-light);font-size:1.6rem;cursor:pointer}
+    header nav a{color:var(--text-light);margin-left:1rem;text-decoration:none}
+    header nav a:hover{color:var(--primary)}
+    /* Sidebar */
+    .sidebar{
+      height:100%;width:0;position:fixed;top:0;left:0;background:#333;
+      overflow-x:hidden;transition:.3s;padding-top:70px;z-index:999
+    }
+    .sidebar a{
+      display:block;padding:1rem 1.5rem;color:#f1f1f1;text-decoration:none;font-size:1rem;transition:.3s
+    }
+    .sidebar a:hover{background:#575757}
+    /* Content */
+    .content{margin-top:70px;padding:2rem}
+    h1{margin-bottom:1.25rem;color:var(--primary)}
+    .class-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+    .class-table th,.class-table td{padding:.9rem .8rem;border-bottom:1px solid #eee;text-align:left;font-size:.95rem}
+    .class-table th{background:#fafafa}
+    .class-table tr:nth-child(even) td{background:#fcfcfc}
+    .capacity{font-weight:600}
+    .btn-reg{
+      background:var(--primary);color:#fff;border:none;border-radius:4px;
+      padding:.45rem .9rem;font-size:.9rem;cursor:pointer;transition:.2s
+    }
+    .btn-reg.cancel{background:#a9a9a9}
+    .btn-reg:hover{opacity:.9}
+    @media(max-width:768px){
+      .class-table th:nth-child(4),.class-table td:nth-child(4){display:none}
+      .class-table th:nth-child(6),.class-table td:nth-child(6){display:none}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h2>Class Registration</h2>
+    <nav>
+      <a href="/about">About</a>
+      <a href="/logout">Logout</a>
+    </nav>
+  </header>
+
+  <!-- Sidebar -->
+  <div id="mySidebar" class="sidebar">
+    <a href="/purchase_program">Purchase Programs</a>
+    <a href="/class_registration">Register Classes</a>
+    <a href="/account_settings">Account Settings</a>
+    <a href="/logout">Logout</a>
+  </div>
+
+  <!-- Main -->
+  <div class="content">
+    <h1>Available Classes</h1>
+
+    <table class="class-table">
+      <thead>
+        <tr>
+          <th>Class</th>
+          <th>Instructor</th>
+          <th>Day &amp; Time</th>
+          <th>Difficulty</th>
+          <th>Spots</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set week_label = None %}
+        {% for r in rows %}
+          {% if week_label != r.schedule_date[:10] %}
+            {% set week_label = r.schedule_date[:10] %}
+            <tr>
+              <th colspan="6" style="background:#121212;color:#fff;text-align:left">
+                Week of {{ week_label }}
+              </th>
+            </tr>
+          {% endif %}
+          <tr>
+            <td>{{ r.name }}</td>
+            <td>{{ r.instructor }}</td>
+            <td>{{ r.weekday }} {{ r.time }}</td>
+            <td>{{ r.difficulty|capitalize }}</td>
+            <td class="capacity">{{ r.spots_left }}/{{ r.capacity }}</td>
+            <td>
+              {% if r.is_registered %}
+                <form method="post" action="/unregister_class/{{ r.class_id }}">
+                  <input type="hidden" name="date" value="{{ r.schedule_date }}">
+                  <button class="btn-reg cancel">Cancel</button>
+                </form>
+              {% elif r.spots_left > 0 %}
+                <form method="post" action="/register_class/{{ r.class_id }}">
+                  <input type="hidden" name="date" value="{{ r.schedule_date }}">
+                  <button class="btn-reg">Register</button>
+                </form>
+              {% else %}
+                <span style="color:#888">Full</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Script -->
+  <script>
+    function toggleSidebar(){
+      const sb=document.getElementById("mySidebar");
+      sb.style.width = sb.style.width==="250px" ? "0" : "250px";
+    }
+    document.addEventListener("click",e=>{
+      const sb=document.getElementById("mySidebar"),
+            btn=document.querySelector(".menu-btn");
+      if(sb.style.width==="250px" && !sb.contains(e.target) && !btn.contains(e.target)){
+        sb.style.width="0";
+      }
+    });
+  </script>
+</body>
+</html>
