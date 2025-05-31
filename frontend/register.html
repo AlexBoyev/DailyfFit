@@ -6,94 +6,45 @@
   <title>DailyFit — Register</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"/>
   <style>
-    :root {
-      --primary-color: #ff6b6b;
-      --dark-bg: #121212;
-      --text-light: #f9f9f9;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html {
-      height: 100%;
-      font-family: 'Poppins', sans-serif;
-      background: url('/images/gym2.jpg') center/cover no-repeat fixed;
-    }
-    a { text-decoration: none; color: inherit; }
+    :root{--primary-color:#ff6b6b;--dark-bg:#121212;--text-light:#f9f9f9;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body,html{height:100%;font-family:'Poppins',sans-serif;background:url('/images/gym2.jpg') center/cover no-repeat fixed;}
+    a{text-decoration:none;color:inherit;}
 
-    header {
-      position: fixed; top: 0; width: 100%; height: 70px;
-      background: var(--dark-bg); color: var(--text-light);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 2rem; z-index: 1000;
+    header{
+      position:fixed;top:0;width:100%;height:70px;background:var(--dark-bg);color:var(--text-light);
+      display:flex;align-items:center;justify-content:space-between;padding:0 2rem;z-index:1000;
     }
-    header .logo { display: flex; align-items: center; }
-    header .logo img { height: 40px; margin-right: .5rem; }
-    header .logo span {
-      font-size: 1.5rem; font-weight: 600;
-      color: var(--text-light);
-    }
-    nav a {
-      margin-left: 1.5rem; font-weight: 500;
-      transition: color .3s; line-height: 70px;
-      color: var(--text-light);
-    }
-    nav a:hover { color: var(--primary-color); }
+    header .logo{display:flex;align-items:center;}
+    header .logo img{height:40px;margin-right:.5rem;}
+    header .logo span{font-size:1.5rem;font-weight:600;color:var(--text-light);}
+    nav a{margin-left:1.5rem;font-weight:500;transition:color .3s;line-height:70px;color:var(--text-light);}
+    nav a:hover{color:var(--primary-color);}
 
-    .hero {
-      padding-top: 70px; height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      position: relative;
+    .hero{padding-top:70px;height:100vh;display:flex;align-items:center;justify-content:center;position:relative;}
+    .hero::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.6);}
+    .hero-content{
+      position:relative;z-index:1;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);
+      padding:1.5rem;border-radius:8px;width:90%;max-width:320px;color:var(--text-light);text-align:center;animation:fadeIn 1s ease-out;
     }
-    .hero::before {
-      content: ''; position: absolute; inset: 0;
-      background: rgba(0, 0, 0, .6);
+    .hero-content h2{margin-bottom:1rem;font-size:1.5rem;}
+    .hero-content input{
+      width:100%;padding:.65rem;margin-bottom:.75rem;border:none;border-radius:4px;
+      font-size:1rem;background:rgba(255,255,255,0.2);color:#fff;
     }
-    .hero-content {
-      position: relative; z-index: 1;
-      background: rgba(255, 255, 255, .1);
-      backdrop-filter: blur(8px);
-      padding: 1.5rem; border-radius: 8px;
-      width: 90%; max-width: 320px;
-      color: var(--text-light); text-align: center;
-      animation: fadeIn 1s ease-out;
+    .hero-content input::placeholder{color:rgba(255,255,255,0.7);}
+    .hero-content button{
+      width:100%;padding:.75rem;margin-top:.5rem;border:none;border-radius:4px;
+      background:var(--primary-color);color:#fff;font-size:1rem;cursor:pointer;transition:background .3s;
     }
-    .hero-content h2 {
-      margin-bottom: 1rem; font-size: 1.5rem;
-    }
-    .hero-content input {
-      width: 100%; padding: .65rem; margin-bottom: .75rem;
-      border: none; border-radius: 4px;
-      font-size: 1rem; background: rgba(255,255,255,0.2);
-      color: #fff;
-    }
-    .hero-content input::placeholder {
-      color: rgba(255,255,255,0.7);
-    }
-    .hero-content button {
-      width: 100%; padding: .75rem; margin-top: .5rem;
-      border: none; border-radius: 4px;
-      background: var(--primary-color); color: #fff;
-      font-size: 1rem; cursor: pointer;
-      transition: background .3s;
-    }
-    .hero-content button:hover { background: #e65555; }
+    .hero-content button:hover{background:#e65555;}
 
-    .bottom-text {
-      margin-top: 1rem; font-size: .95rem;
-      color: rgba(255,255,255,0.8);
-    }
-    .bottom-text a {
-      color: var(--primary-color); font-weight: 600;
-    }
-    .bottom-text a:hover { text-decoration: underline; }
+    .bottom-text{margin-top:1rem;font-size:.95rem;color:rgba(255,255,255,0.8);}
+    .bottom-text a{color:var(--primary-color);font-weight:600;}
+    .bottom-text a:hover{text-decoration:underline;}
+    #response{margin-top:.75rem;font-size:.9rem;color:#ffdf00;}
 
-    #response {
-      margin-top: .75rem; font-size: .9rem; color: #ffdf00;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
   </style>
 </head>
 <body>
@@ -104,6 +55,7 @@
       <span>DailyFit</span>
     </a>
     <nav>
+      <a href="/">Home</a>
       <a href="/login">Login</a>
       <a href="/about">About</a>
     </nav>
@@ -131,8 +83,8 @@
   <script>
     document.getElementById('registerForm').addEventListener('submit', async e => {
       e.preventDefault();
-      const pwd = document.getElementById('password').value.trim(),
-            cp  = document.getElementById('confirmPassword').value.trim();
+      const pwd = document.getElementById('password').value.trim();
+      const cp  = document.getElementById('confirmPassword').value.trim();
       if (pwd !== cp) {
         return document.getElementById('response').innerText = 'Passwords do not match.';
       }
@@ -146,7 +98,7 @@
       try {
         const res = await fetch('/register', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
