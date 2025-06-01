@@ -1,11 +1,12 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Account Settings — DailyFit</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Account Settings — DailyFit</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&amp;display=swap" rel="stylesheet"/>
+<style>
     /* ---------- Base ---------- */
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Poppins',sans-serif;background:#f7f8fa;color:#333;min-height:100vh}
@@ -88,201 +89,279 @@
     .delete-btn{background:#ff6b6b;border:none;color:#fff;font-weight:bold;
       border-radius:4px;padding:.25rem .55rem;cursor:pointer;line-height:1}
     .delete-btn:hover{background:#e85c5c}
+
+    /* ---------- New Nutrition Plan Form ---------- */
+    .nutrition-plan-form{
+      margin-top:2rem;padding:1.5rem;border:1px solid #ddd;border-radius:8px;
+      background:#f9f9f9
+    }
+    .nutrition-plan-form h3{margin-bottom:1rem;color:#333}
+    .nutrition-plan-grid{
+      display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem
+    }
+    .nutrition-plan-grid .form-group{margin-bottom:0}
+    .full-width{grid-column:span 2}
   </style>
 </head>
 <body>
-
 <!-- ---------- Header ---------- -->
 <header>
-  <div style="display:flex;align-items:center">
-    <button class="hamburger" onclick="toggleSidebar()">☰</button>
-    <span style="margin-left:1rem;font-size:1.2rem;font-weight:600">DailyFit</span>
-  </div>
-  <nav>
-    <a href="/about">About</a>
-    <a href="/logout">Logout</a>
-  </nav>
+<div style="display:flex;align-items:center">
+<button class="hamburger" onclick="toggleSidebar()">☰</button>
+<span style="margin-left:1rem;font-size:1.2rem;font-weight:600">DailyFit</span>
+</div>
+<nav>
+<a href="/about">About</a>
+<a href="/logout">Logout</a>
+</nav>
 </header>
-
 <!-- ---------- Mobile sidebar ---------- -->
 <div class="sidebar" id="mobileNav">
-  <a href="/purchase_program">Purchase Programs</a>
-  <a href="/class_registration">Register Classes</a>
-  <a href="/personal_trainer">Personal trainer</a>
+<a href="/purchase_program">Purchase Programs</a>
+<a href="/class_registration">Register Classes</a>
+<a href="/personal_trainer">Personal trainer</a>
 </div>
-
-
 <!-- ---------- Main layout ---------- -->
 <div class="container">
-
-  <!-- ----- Sidebar ----- -->
-  <aside>
-    <img src="/images/uploads/{{ profile_picture|default('default-profile.png') }}" alt="Profile">
-    <h2>{{ name }}</h2>
-    <p>{{ email }}</p>
-
-    <nav class="menu">
-      <a href="#" class="active" onclick="showTab('settingsTab',this)">Account Settings</a>
-      <a href="#" onclick="showTab('securityTab',this)">Security &amp; Privacy</a>
-      <a href="#" onclick="showTab('fitnessTab',this)">Fitness Profile</a>
-      <a href="#" onclick="showTab('nutritionTab',this)">Nutrition</a>
-    </nav>
-  </aside>
-
-  <!-- ----- Content ----- -->
-  <main>
-
-    <!-- ========== Account Settings ========== -->
-    <div id="settingsTab" class="tab-content">
-      <h1>Account Settings</h1>
-
-      <div class="info-box">
-        <h3>Membership</h3>
-        <div class="info-row"><span class="info-label">Current Plan:</span><span class="info-value">{{ membership_plan }}</span></div>
-        <div class="info-row"><span class="info-label">Personal Trainer:</span><span class="info-value">{{ trainer_name }}</span></div>
-        <div style="margin-top:1rem;display:flex;gap:1rem">
-          <form method="post" action="/update_plan">
-            <input type="hidden" name="plan" value="Free membership">
-            <button class="btn-plan" onclick="return confirm('Cancel current plan?')" type="submit">Cancel Plan</button>
-          </form>
-          <a class="btn-plan" href="/purchase_program">Change Plan</a>
-        </div>
-      </div>
-
-      <form method="post" enctype="multipart/form-data">
-        <div class="form-row">
-          <div class="form-group"><label for="name">Full Name</label><input id="name" name="name" value="{{ name }}"></div>
-          <div class="form-group"><label for="email">Email</label><input id="email" name="email" type="email" value="{{ email }}"></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label for="phone">Phone</label><input id="phone" name="phone" value="{{ phone }}"></div>
-          <div class="form-group"><label for="address">Address</label><input id="address" name="address" value="{{ address }}"></div>
-        </div>
-        <div class="form-group"><label for="profile_picture">Update Profile Picture</label><input id="profile_picture" type="file" name="profile_picture"></div>
-        <div class="actions"><button class="btn-update" type="submit">Update Profile</button></div>
-      </form>
-    </div>
-
-    <!-- ========== Security & Privacy ========== -->
-    <div id="securityTab" class="tab-content" style="display:none">
-      <h1>Security &amp; Privacy</h1>
+<!-- ----- Sidebar ----- -->
+<aside>
+<img alt="Profile" src="/images/uploads/{{ profile_picture|default('default-profile.png') }}"/>
+<h2>{{ name }}</h2>
+<p>{{ email }}</p>
+<nav class="menu">
+<a class="active" href="#" onclick="showTab('settingsTab',this)">Account Settings</a>
+<a href="#" onclick="showTab('securityTab',this)">Security &amp; Privacy</a>
+<a href="#" onclick="showTab('fitnessTab',this)">Fitness Profile</a>
+<a href="#" onclick="showTab('nutritionTab',this)">Nutrition</a>
+</nav>
+</aside>
+<!-- ----- Content ----- -->
+<main>
+<!-- ========== Account Settings ========== -->
+<div class="tab-content" id="settingsTab">
+<h1>Account Settings</h1>
+<div class="info-box">
+<h3>Membership</h3>
+<div class="info-row"><span class="info-label">Current Plan:</span><span class="info-value">{{ membership_plan }}</span></div>
+<div class="info-row"><span class="info-label">Personal Trainer:</span><span class="info-value">{{ trainer_name }}</span></div>
+<div style="margin-top:1rem;display:flex;gap:1rem">
+<form action="/update_plan" method="post">
+<input name="plan" type="hidden" value="Free membership"/>
+<button class="btn-plan" onclick="return confirm('Cancel current plan?')" type="submit">Cancel Plan</button>
+</form>
+<a class="btn-plan" href="/purchase_program">Change Plan</a>
+</div>
+</div>
+<form enctype="multipart/form-data" method="post">
+<div class="form-row">
+<div class="form-group"><label for="name">Full Name</label><input id="name" name="name" value="{{ name }}"/></div>
+<div class="form-group"><label for="email">Email</label><input id="email" name="email" type="email" value="{{ email }}"/></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label for="phone">Phone</label><input id="phone" name="phone" value="{{ phone }}"/></div>
+<div class="form-group"><label for="address">Address</label><input id="address" name="address" value="{{ address }}"/></div>
+</div>
+<div class="form-group"><label for="profile_picture">Update Profile Picture</label><input id="profile_picture" name="profile_picture" type="file"/></div>
+<div class="actions"><button class="btn-update" type="submit">Update Profile</button></div>
+</form>
+</div>
+<!-- ========== Security & Privacy ========== -->
+<div class="tab-content" id="securityTab" style="display:none">
+<h1>Security &amp; Privacy</h1>
 
       {% if password_error %}<div class="error-message">{{ password_error }}</div>{% endif %}
       {% if mismatch_error %}<div class="error-message">{{ mismatch_error }}</div>{% endif %}
       {% if success_message %}<div class="success-message">{{ success_message }}</div>{% endif %}
 
-      <form method="post" action="/update_password#securityTab">
-        <div class="form-row">
-          <div class="form-group"><label for="current_password">Current Password</label><input id="current_password" name="current_password" type="password" required></div>
-          <div class="form-group"><label for="new_password">New Password</label><input id="new_password" name="new_password" type="password" required></div>
-        </div>
-        <div class="form-group"><label for="confirm_password">Confirm Password</label><input id="confirm_password" name="confirm_password" type="password" required></div>
-        <div class="actions"><button class="btn-update" type="submit">Update Password</button></div>
-      </form>
-    </div>
+      <form action="/update_password#securityTab" method="post">
+<div class="form-row">
+<div class="form-group"><label for="current_password">Current Password</label><input id="current_password" name="current_password" required="" type="password"/></div>
+<div class="form-group"><label for="new_password">New Password</label><input id="new_password" name="new_password" required="" type="password"/></div>
+</div>
+<div class="form-group"><label for="confirm_password">Confirm Password</label><input id="confirm_password" name="confirm_password" required="" type="password"/></div>
+<div class="actions"><button class="btn-update" type="submit">Update Password</button></div>
+</form>
+</div>
+<!-- ========== Fitness Profile ========== -->
+<div class="tab-content" id="fitnessTab" style="display:none">
+<h1>Fitness Profile</h1>
+<form method="post">
+<div class="form-row">
+<div class="form-group"><label for="height_cm">Height (cm)</label><input id="height_cm" name="height_cm" type="number" value="{{ height_cm }}"/></div>
+<div class="form-group"><label for="weight_kg">Weight (kg)</label><input id="weight_kg" name="weight_kg" type="number" value="{{ weight_kg }}"/></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label for="age">Age</label><input id="age" name="age" type="number" value="{{ age }}"/></div>
+<div class="form-group">
+  <label for="gender">Gender</label>
+  <select id="gender" name="gender">
+    <option value="">Select</option>
+    <option value="male" {% if gender == 'male' %}selected{% endif %}>Male</option>
+    <option value="female" {% if gender == 'female' %}selected{% endif %}>Female</option>
+    <option value="other" {% if gender == 'other' %}selected{% endif %}>Other</option>
+  </select>
+</div>
+</div>
+<div class="form-group"><label for="medical_conditions">Medical Conditions</label><textarea id="medical_conditions" name="medical_conditions">{{ medical_conditions }}</textarea></div>
+<div class="actions"><button class="btn-update" type="submit">Update Fitness Profile</button></div>
+</form>
+</div>
+<!-- ========== Nutrition (Log) ========== -->
+<div class="tab-content" id="nutritionTab" style="display:none">
+<h1>Nutrition Log</h1>
 
-    <!-- ========== Fitness Profile ========== -->
-    <div id="fitnessTab" class="tab-content" style="display:none">
-      <h1>Fitness Profile</h1>
-      <form method="post">
-        <div class="form-row">
-          <div class="form-group"><label for="height_cm">Height (cm)</label><input id="height_cm" name="height_cm" type="number" value="{{ height_cm }}"></div>
-          <div class="form-group"><label for="weight_kg">Weight (kg)</label><input id="weight_kg" name="weight_kg" type="number" value="{{ weight_kg }}"></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label for="age">Age</label><input id="age" name="age" type="number" value="{{ age }}"></div>
-          <div class="form-group">
-            <label for="gender">Gender</label>
-            <select id="gender" name="gender">
-              <option value="">Select</option>
-              <option value="male"   {% if gender=='male' %}selected{% endif %}>Male</option>
-              <option value="female" {% if gender=='female' %}selected{% endif %}>Female</option>
-              <option value="other"  {% if gender=='other' %}selected{% endif %}>Other</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group"><label for="medical_conditions">Medical Conditions</label><textarea id="medical_conditions" name="medical_conditions">{{ medical_conditions }}</textarea></div>
-        <div class="actions"><button class="btn-update" type="submit">Update Fitness Profile</button></div>
-      </form>
-    </div>
+<!-- Diet Preferences Form -->
+<div class="info-box">
+<h3>Nutrition Preferences</h3>
+<form action="/update_nutrition_preferences" method="post">
+<div class="form-row">
+<div class="form-group">
+<label for="type">Fitness Goals</label>
+<select id="type" name="type">
+<option value="">Select Goal</option>
+<option value="weight_loss" {% if type == 'weight_loss' %}selected{% endif %}>Weight Loss</option>
+<option value="muscle_gain" {% if type == 'muscle_gain' %}selected{% endif %}>Muscle Gain</option>
+<option value="fitness" {% if type == 'fitness' %}selected{% endif %}>Fitness</option>
+</select>
+</div>
+<div class="form-group">
+<label for="diet_type">Diet Type</label>
+<select id="diet_type" name="diet_type">
+<option value="">Select Diet</option>
+<option value="vegan" {% if diet_type == 'vegan' %}selected{% endif %}>Vegan</option>
+<option value="vegetarian" {% if diet_type == 'vegetarian' %}selected{% endif %}>Vegetarian</option>
+<option value="keto" {% if diet_type == 'keto' %}selected{% endif %}>Keto</option>
+<option value="paleo" {% if diet_type == 'paleo' %}selected{% endif %}>Paleo</option>
+<option value="none" {% if diet_type == 'none' %}selected{% endif %}>None</option>
+</select>
+</div>
+</div>
+<div class="actions"><button class="btn-update" type="submit">Update Preferences</button></div>
+</form>
+</div>
 
-    <!-- ========== Nutrition (Log) ========== -->
-    <div id="nutritionTab" class="tab-content" style="display:none">
-      <h1>Nutrition Log</h1>
+<!-- Entry form -->
+<form action="/add_nutrition_log" method="post">
+<div class="form-row">
+<div class="form-group">
+<label for="date">Date</label>
+<input id="date" name="date" required="" type="date"/>
+</div>
+<div class="form-group">
+<label for="meal_type">Meal Type</label>
+<select id="meal_type" name="meal_type" required="">
+<option value="">Select</option>
+<option value="breakfast">Breakfast</option>
+<option value="lunch">Lunch</option>
+<option value="dinner">Dinner</option>
+<option value="snack">Snack</option>
+</select>
+</div>
+</div>
+<div class="form-row macro-grid">
+<div class="form-group"><label for="calories">Calories</label><input id="calories" name="calories" required="" type="number" min="0"/></div>
+<div class="form-group"><label for="protein_grams">Protein (g)</label><input id="protein_grams" name="protein_grams" required="" type="number" min="0"/></div>
+<div class="form-group"><label for="carbs_grams">Carbs (g)</label><input id="carbs_grams" name="carbs_grams" required="" type="number" min="0"/></div>
+<div class="form-group"><label for="fat_grams">Fats (g)</label><input id="fat_grams" name="fat_grams" required="" type="number" min="0"/></div>
+</div>
+<div class="form-group">
+<label for="notes">Notes</label>
+<textarea id="notes" name="notes" placeholder="Comments, ingredients, etc."></textarea>
+</div>
+<div class="actions"><button class="btn-update" type="submit">Add Log</button></div>
+</form>
 
-      <!-- Entry form -->
-      <form method="post" action="/add_nutrition_log">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="date">Date</label>
-            <input id="date" name="date" type="date" required>
-          </div>
-          <div class="form-group">
-            <label for="meal_type">Meal Type</label>
-            <select id="meal_type" name="meal_type" required>
-              <option value="">Select</option>
-              <option value="breakfast">Breakfast</option>
-              <option value="lunch">Lunch</option>
-              <option value="dinner">Dinner</option>
-              <option value="snack">Snack</option>
-            </select>
-          </div>
-        </div>
+<!-- Create New Nutrition Plan Form -->
+<div class="nutrition-plan-form">
+<h3>Create a New Nutrition Plan</h3>
+<form action="/create_nutrition_menu" method="post">
+<div class="nutrition-plan-grid">
+<div class="form-group">
+<label for="plan_title">Plan Title</label>
+<input id="plan_title" name="title" placeholder="e.g., My Weight Loss Plan" required type="text"/>
+</div>
+<div class="form-group">
+<label for="plan_type">Fitness Goal</label>
+<select id="plan_type" name="type" required>
+<option value="">Select Goal</option>
+<option value="weight_loss">Weight Loss</option>
+<option value="muscle_gain">Muscle Gain</option>
+<option value="fitness">Fitness</option>
+</select>
+</div>
+<div class="form-group">
+<label for="plan_diet_type">Diet Type</label>
+<select id="plan_diet_type" name="diet_type" required>
+<option value="">Select Diet Type</option>
+<option value="vegan">Vegan</option>
+<option value="vegetarian">Vegetarian</option>
+<option value="keto">Keto</option>
+<option value="paleo">Paleo</option>
+<option value="none">None</option>
+</select>
+</div>
+<div class="form-group">
+<label for="plan_calories">Daily Calories</label>
+<input id="plan_calories" name="calories" placeholder="2000" required type="number" min="500" max="5000"/>
+</div>
+<div class="form-group">
+<label for="plan_protein">Protein (g)</label>
+<input id="plan_protein" name="protein_grams" placeholder="150" required type="number" min="0"/>
+</div>
+<div class="form-group">
+<label for="plan_carbs">Carbs (g)</label>
+<input id="plan_carbs" name="carbs_grams" placeholder="250" required type="number" min="0"/>
+</div>
+<div class="form-group">
+<label for="plan_fats">Fats (g)</label>
+<input id="plan_fats" name="fat_grams" placeholder="67" required type="number" min="0"/>
+</div>
+</div>
+<div class="form-group full-width">
+<label for="plan_description">Description (Optional)</label>
+<textarea id="plan_description" name="description" placeholder="Describe your nutrition plan goals and notes..." rows="3"></textarea>
+</div>
+<div class="actions">
+<button class="btn-update" type="submit">Create Nutrition Plan</button>
+</div>
+</form>
+</div>
 
-        <div class="form-row macro-grid">
-          <div class="form-group"><label for="calories">Calories</label><input id="calories" name="calories" type="number" required></div>
-          <div class="form-group"><label for="protein_grams">Protein (g)</label><input id="protein_grams" name="protein_grams" type="number" required></div>
-          <div class="form-group"><label for="carbs_grams">Carbs (g)</label><input id="carbs_grams" name="carbs_grams" type="number" required></div>
-          <div class="form-group"><label for="fat_grams">Fats (g)</label><input id="fat_grams" name="fat_grams" type="number" required></div>
-        </div>
-
-        <div class="form-group">
-          <label for="notes">Notes</label>
-          <textarea id="notes" name="notes" placeholder="Comments, ingredients, etc."></textarea>
-        </div>
-
-        <div class="actions"><button class="btn-update" type="submit">Add Log</button></div>
-      </form>
-
-      <!-- Log history -->
+<!-- Log history -->
       {% if nutrition_logs is defined and nutrition_logs %}
         <h3 style="margin-top:2rem">Your Recent Logs</h3>
-        <table class="log-table">
-          <thead>
-            <tr>
-              <th>Date</th><th>Meal</th><th>Calories</th>
-              <th>Protein</th><th>Carbs</th><th>Fats</th><th>Notes</th><th></th>
-            </tr>
-          </thead>
-          <tbody>
+<table class="log-table">
+<thead>
+<tr>
+<th>Date</th><th>Meal</th><th>Calories</th>
+<th>Protein</th><th>Carbs</th><th>Fats</th><th>Notes</th><th></th>
+</tr>
+</thead>
+<tbody>
             {% for log in nutrition_logs %}
               <tr>
-                <td>{{ log.date }}</td>
-                <td>{{ log.meal_type|capitalize }}</td>
-                <td>{{ log.calories }}</td>
-                <td>{{ log.protein_grams }} g</td>
-                <td>{{ log.carbs_grams }} g</td>
-                <td>{{ log.fat_grams }} g</td>
-                <td style="max-width:250px">{{ log.notes }}</td>
-                <td>
-                  <form method="post"
-                        action="/delete_nutrition_log/{{ log.id }}"
-                        onsubmit="return confirm('Delete this entry?');">
-                    <button class="delete-btn" title="Delete">✕</button>
-                  </form>
-                </td>
-              </tr>
+<td>{{ log.date }}</td>
+<td>{{ log.meal_type|capitalize }}</td>
+<td>{{ log.calories }}</td>
+<td>{{ log.protein_grams }} g</td>
+<td>{{ log.carbs_grams }} g</td>
+<td>{{ log.fat_grams }} g</td>
+<td style="max-width:250px">{{ log.notes }}</td>
+<td>
+<form action="/delete_nutrition_log/{{ log.id }}" method="post" onsubmit="return confirm('Delete this entry?');">
+<button class="delete-btn" title="Delete">✕</button>
+</form>
+</td>
+</tr>
             {% endfor %}
           </tbody>
-        </table>
+</table>
       {% else %}
         <p style="margin-top:1.25rem">No logs yet. Start adding meals above!</p>
       {% endif %}
     </div><!-- /nutritionTab -->
-
-  </main>
+</main>
 </div>
-
 <!-- ---------- Scripts ---------- -->
 <script>
   function showTab(id, link){
@@ -306,7 +385,15 @@
       showTab('securityTab', document.querySelector('.menu a:nth-child(2)'));
     }
   });
-</script>
 
+  // Close mobile sidebar when clicking outside
+  document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('mobileNav');
+    const hamburger = document.querySelector('.hamburger');
+    if (!sidebar.contains(event.target) && !hamburger.contains(event.target)) {
+      sidebar.classList.remove('active');
+    }
+  });
+</script>
 </body>
 </html>

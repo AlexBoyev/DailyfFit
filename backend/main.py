@@ -13,6 +13,8 @@ from pathlib import Path
 from datetime import datetime, date, timedelta
 from dotenv import load_dotenv
 import uvicorn
+from tinyllama.tinyllama_assistant import get_personalized_llama_reply
+
 
 from fastapi import (
     FastAPI, Request, Form, HTTPException, UploadFile, File,
@@ -102,6 +104,7 @@ def jwt_email(token: str | None) -> str | None:
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+
 @app.get("/about", response_class=HTMLResponse)
 def about(request: Request):
     return templates.TemplateResponse(
@@ -115,6 +118,47 @@ def login_page(request: Request):
         "login.html",
         {"request": request, "site_key": SITE_KEY, "captcha_enabled": CAPTCHA_ON}
     )
+
+
+@app.post("/update_nutrition_preferences")
+async def update_nutrition_preferences(
+        request: Request,
+        type: str = Form(...),
+        diet_type: str = Form(...)
+):
+    email = jwt_email(request.cookies.get("token"))
+    if not email:
+        return RedirectResponse("/login", 302)
+
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id FROM Users WHERE email=%s", (email,))
+    uid = cur.fetchone()[0]
+
+    # Check if user already has nutrition preferences
+    cur.execute("SELECT id FROM NutritionMenus WHERE user_id=%s LIMIT 1", (uid,))
+    existing = cur.fetchone()
+
+    if existing:
+        # Update existing record
+        cur.execute("""
+            UPDATE NutritionMenus 
+            SET type = %s, diet_type = %s, last_updated = NOW()
+            WHERE user_id = %s
+        """, (type, diet_type, uid))
+    else:
+        # Create new record with default values
+        cur.execute("""
+            INSERT INTO NutritionMenus (user_id, type, diet_type, title, calories, protein_grams, carbs_grams, fat_grams)
+            VALUES (%s, %s, %s, 'Default Plan', 2000, 150, 250, 67)
+        """, (uid, type, diet_type))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return RedirectResponse("/account_settings?tab=nutrition", 303)
+
 
 @app.post("/account_settings")
 async def update_account_settings(
@@ -236,27 +280,66 @@ def purchase_program(request: Request):
 # ────────────────────────────────────────────────────────────────────
 @app.get("/account_settings", response_class=HTMLResponse)
 def account_settings(request: Request):
+    # 1. Fetch basic user data (name, email, phone, address, fitness fields, etc.)
     ctx = UserService().get_user_data_from_request(request)
     email = ctx.get("email")
+
     nutrition_logs = []
+    nutrition_pref = None
+
     if email:
-        conn = get_connection(); cur = conn.cursor(dictionary=True)
+        conn = get_connection()
+        cur = conn.cursor(dictionary=True)
+
+        # 2. Find the user’s ID
         cur.execute("SELECT id FROM Users WHERE email=%s", (email,))
-        uid = cur.fetchone()["id"]
-        cur.execute("""
-            SELECT id,date,meal_type,calories,protein_grams,
-                   carbs_grams,fat_grams,notes
-              FROM NutritionLogs
-             WHERE user_id=%s
-          ORDER BY date DESC, created_at DESC
-             LIMIT 30
-        """, (uid,))
-        nutrition_logs = cur.fetchall()
-        cur.close(); conn.close()
+        row = cur.fetchone()
+        if row:
+            uid = row["id"]
+
+            # 3. Load the last 30 nutrition logs (unchanged from before)
+            cur.execute("""
+                SELECT id, date, meal_type, calories,
+                       protein_grams, carbs_grams, fat_grams, notes
+                  FROM NutritionLogs
+                 WHERE user_id=%s
+              ORDER BY date DESC, created_at DESC
+                 LIMIT 30
+            """, (uid,))
+            nutrition_logs = cur.fetchall()
+
+            # 4. Load the user’s current nutrition preferences (type & diet_type)
+            cur.execute("""
+                SELECT type, diet_type
+                  FROM NutritionMenus
+                 WHERE user_id=%s
+              ORDER BY last_updated DESC
+                 LIMIT 1
+            """, (uid,))
+            nutrition_pref = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+    # 5. Inject type & diet_type into the context so Jinja can mark <option selected>
+    if nutrition_pref:
+        ctx["type"] = nutrition_pref["type"]
+        ctx["diet_type"] = nutrition_pref["diet_type"]
+    else:
+        # If the user never set preferences, let them default to empty
+        ctx["type"] = None
+        ctx["diet_type"] = None
+
+    # 6. Render template with everything
     return templates.TemplateResponse(
         "account_settings.html",
-        {"request": request, **ctx, "nutrition_logs": nutrition_logs}
+        {
+            "request": request,
+            **ctx,
+            "nutrition_logs": nutrition_logs
+        }
     )
+
 
 @app.post("/add_nutrition_log")
 async def add_nutrition_log(
@@ -284,6 +367,54 @@ async def add_nutrition_log(
           protein_grams, carbs_grams, fat_grams, notes))
     conn.commit(); cur.close(); conn.close()
     return RedirectResponse("/account_settings?tab=nutrition", 303)
+
+@app.post("/delete_nutrition_menu")
+async def delete_nutrition_menu(request: Request, menu_id: int = Form(...)):
+    email = jwt_email(request.cookies.get("token"))
+    if not email:
+        return RedirectResponse("/login", 302)
+
+    conn = get_connection(); cur = conn.cursor()
+    cur.execute("SELECT id FROM Users WHERE email=%s", (email,))
+    uid = cur.fetchone()[0]
+
+    cur.execute("DELETE FROM NutritionMenus WHERE id=%s AND user_id=%s", (menu_id, uid))
+    conn.commit(); cur.close(); conn.close()
+    return RedirectResponse("/account_settings?tab=nutrition", 303)
+
+
+@app.post("/create_nutrition_menu")
+async def create_nutrition_menu(
+    request: Request,
+    title: str = Form(...),
+    calories: int = Form(...),
+    type: str = Form(...),
+    description: str = Form(""),
+    diet_type: str = Form(...),
+    protein_grams: int = Form(...),
+    carbs_grams: int = Form(...),
+    fat_grams: int = Form(...)
+):
+    email = jwt_email(request.cookies.get("token"))
+    if not email:
+        return RedirectResponse("/login", 302)
+
+    conn = get_connection(); cur = conn.cursor()
+    cur.execute("SELECT id FROM Users WHERE email=%s", (email,))
+    uid = cur.fetchone()[0]
+
+    cur.execute("""
+        INSERT INTO NutritionMenus (
+            user_id, title, calories, type, description, meal_plan,
+            diet_type, protein_grams, carbs_grams, fat_grams
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (uid, title, calories, type, description, '{}', diet_type,
+          protein_grams, carbs_grams, fat_grams))
+
+    conn.commit(); cur.close(); conn.close()
+    return RedirectResponse("/account_settings?tab=nutrition", 303)
+
 
 @app.post("/delete_nutrition_log/{log_id}")
 def delete_log(request: Request, log_id: int = FPath(...)):
@@ -337,6 +468,19 @@ def unregister_class(request: Request,
         return RedirectResponse("/login", 302)
     cls.cancel(uid, class_id, date)
     return RedirectResponse("/class_registration", 303)
+
+
+from tinyllama.llama_api import router as llama_router
+app.include_router(llama_router, prefix="/api/llama")
+
+@app.get("/dailyfit_assistant", response_class=HTMLResponse)
+def dailyfit_assistant(request: Request):
+    return templates.TemplateResponse("dailyfit_assistant.html", {"request": request})
+
+from tinyllama.llama_api import router as llama_router
+app.include_router(llama_router)
+
+
 
 # ────────────────────────────────────────────────────────────────────
 # 10. Dev entry-point

@@ -19,5 +19,17 @@ services:
     env_file:
       - .env
 
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./startup.sh:/startup.sh
+    command: ["sh", "/startup.sh"]
+
 volumes:
   mysql_data:
+  ollama_data:
