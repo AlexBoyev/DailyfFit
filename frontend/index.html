@@ -157,3 +157,148 @@
   </footer>
 </body>
 </html>
+
+<!-- ========== DAILYBOT CHATBOT SNIPPET ========== -->
+<!-- Add this CSS to your existing <style> section -->
+<style>
+/* ---------- Chatbot Styles ---------- */
+.chatbot-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--primary, #ff6b6b);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  z-index: 1001;
+}
+
+.chat-window {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 300px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1001;
+}
+
+.chat-header {
+  background: var(--dark-bg, #121212);
+  color: var(--text-light, #f9f9f9);
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 1rem;
+  height: 200px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.chat-messages p {
+  margin-bottom: 0.5rem;
+}
+
+.chat-input {
+  display: flex;
+  border-top: 1px solid #ccc;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  font-size: 1rem;
+}
+
+.chat-input button {
+  background: var(--primary, #ff6b6b);
+  color: #fff;
+  border: none;
+  padding: 0 1rem;
+  cursor: pointer;
+}
+</style>
+
+<!-- Add this HTML to your page body, before closing </body> tag -->
+<button class="chatbot-button" onclick="toggleChat()">💬</button>
+
+<div id="chatWindow" class="chat-window">
+  <div class="chat-header">Ask DailyBot</div>
+  <div id="chatMessages" class="chat-messages"></div>
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="Type your question..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<!-- Add this JavaScript to your existing <script> section or create new one -->
+<script>
+let chatOpened = false;
+
+function toggleChat() {
+  const cw = document.getElementById("chatWindow");
+  const showing = cw.style.display === "flex";
+  cw.style.display = showing ? "none" : "flex";
+  if (!chatOpened && !showing) {
+    chatOpened = true;
+    setTimeout(() => {
+      const box = document.getElementById("chatMessages");
+      const msg = document.createElement("p");
+      msg.innerHTML = "<strong>Bot:</strong> Hello! Welcome to DailyFit. How can I assist you today?";
+      box.appendChild(msg);
+      box.scrollTop = box.scrollHeight;
+    }, 300);
+  }
+}
+
+function sendMessage() {
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+  if (!text) return;
+  const box = document.getElementById("chatMessages");
+  const you = document.createElement("p");
+  you.innerHTML = `<strong>You:</strong> ${text}`;
+  box.appendChild(you);
+  input.value = "";
+  fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: text })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const bot = document.createElement("p");
+    bot.innerHTML = `<strong>Bot:</strong> ${data.reply}`;
+    box.appendChild(bot);
+    box.scrollTop = box.scrollHeight;
+  })
+  .catch(err => {
+    const bot = document.createElement("p");
+    bot.innerHTML = `<strong>Bot:</strong> Sorry, I'm having trouble responding right now. Please try again later.`;
+    box.appendChild(bot);
+    box.scrollTop = box.scrollHeight;
+  });
+}
+
+// Allow Enter key to send message
+document.getElementById("chatInput").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") {
+    sendMessage();
+  }
+});
+</script>

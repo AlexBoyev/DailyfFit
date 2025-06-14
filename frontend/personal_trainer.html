@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Personal Trainer — DailyFit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary: #ff6b6b;
+      --dark-bg: #121212;
+      --text-light: #f9f9f9;
+      --card-bg: #fff;
+      --card-border: #e0e0e0;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    /* ---------- Header ---------- */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: var(--dark-bg);
+      color: var(--text-light);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .menu-btn {
+      background: none;
+      border: none;
+      color: var(--text-light);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    nav.desktop-nav a {
+      color: var(--text-light);
+      margin-left: 1.5rem;
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    nav.desktop-nav a:hover {
+      color: var(--primary);
+    }
+
+    /* ---------- Mobile sidebar ---------- */
+    .sidebar {
+      height: 100%;
+      width: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: #333;
+      overflow-x: hidden;
+      transition: 0.3s;
+      padding-top: 70px;
+      z-index: 9;
+    }
+    .sidebar a {
+      display: block;
+      padding: 1rem 1.5rem;
+      color: #f1f1f1;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+    .sidebar a:hover {
+      background: #575757;
+    }
+
+    /* ---------- Content wrapper ---------- */
+    .content {
+      margin-top: 70px;
+      padding: 2rem;
+    }
+
+    /* ---------- Trainer grid ---------- */
+    .trainers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 2rem;
+    }
+    .trainer-card {
+      position: relative;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .trainer-card:hover {
+      transform: scale(1.02);
+    }
+
+    /* ---------- Image ---------- */
+    .trainer-img {
+      width: 100%;
+      height: 200px;
+      object-fit: contain;    /* no cropping, show entire image */
+      background: #f0f0f0;     /* if images don’t exactly fill, light background */
+    }
+
+    .trainer-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      padding: 0.75rem 1rem;
+    }
+
+    /* ---------- Hover overlay (only over image area) ---------- */
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 200px;            /* match the .trainer-img height */
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      opacity: 0;
+      transition: opacity 0.2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      pointer-events: none;      /* don’t block clicks when hidden */
+    }
+    .trainer-card:hover .overlay {
+      opacity: 1;
+      pointer-events: auto;      /* allow hover content if needed */
+    }
+
+    /* Assign/Remove button styling */
+    .btn-assign,
+    .btn-remove {
+      display: block;
+      width: calc(100% - 2rem);
+      margin: 1rem;
+      padding: 0.6rem 1rem;
+      text-align: center;
+      border: none;
+      border-radius: 6px;
+      font: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+      position: relative;
+      z-index: 2; /* always above the overlay */
+    }
+    .btn-assign {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-assign:hover {
+      background: #e85c5c;
+    }
+    .btn-remove {
+      background: #ccc;
+      color: #333;
+    }
+    .btn-remove:hover {
+      background: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <!-- ---------- Header ---------- -->
+  <header>
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h1>Personal Trainer</h1>
+    <nav class="desktop-nav">
+      <a href="/about">About</a>
+      <a href="/logout">Logout</a>
+    </nav>
+  </header>
+
+  <!-- ---------- Mobile sidebar (same links) ---------- -->
+  <div id="mySidebar" class="sidebar">
+    <a href="/purchase_program">Purchase Programs</a>
+    <a href="/class_registration">Register Classes</a>
+    <a href="/dailyfit_assistant">DailyFit Assistant</a>
+    <a href="/account_settings">Account Settings</a>
+  </div>
+
+  <!-- ---------- Main content ---------- -->
+  <div class="content">
+    <h2 style="margin-bottom: 1rem;">Choose Your Personal Trainer</h2>
+    <div class="trainers-grid">
+
+      <!-- ------------------------------------------------------------ -->
+      <!-- Trainer: Alex Pro -->
+      <!-- ------------------------------------------------------------ -->
+      <div class="trainer-card">
+        <img
+          src="/images/trainers/alex_pro.jpg"
+          alt="Photo of Alex Pro"
+          class="trainer-img"
+        />
+        <div class="overlay">
+          <div><strong>Age:</strong> 29 years</div>
+          <div><strong>Experience:</strong> 7 years</div>
+          <div><strong>Specialty:</strong> Strength & Conditioning</div>
+        </div>
+        <div class="trainer-name">Alex Pro</div>
+
+        {% if trainer_name == "Alex Pro" %}
+          <form action="/remove_trainer" method="post">
+            <button type="submit" class="btn-remove">Remove Trainer</button>
+          </form>
+        {% else %}
+          <form action="/assign_trainer" method="post">
+            <input type="hidden" name="trainer_name" value="Alex Pro"/>
+            <button type="submit" class="btn-assign">Assign Trainer</button>
+          </form>
+        {% endif %}
+      </div>
+
+
+      <!-- ------------------------------------------------------------ -->
+      <!-- Trainer: Jamie Fit -->
+      <!-- ------------------------------------------------------------ -->
+      <div class="trainer-card">
+        <img
+          src="/images/trainers/jamie_fit.jpg"
+          alt="Photo of Jamie Fit"
+          class="trainer-img"
+        />
+        <div class="overlay">
+          <div><strong>Age:</strong> 34 years</div>
+          <div><strong>Experience:</strong> 12 years</div>
+          <div><strong>Specialty:</strong> Yoga & Pilates</div>
+        </div>
+        <div class="trainer-name">Jamie Fit</div>
+
+        {% if trainer_name == "Jamie Fit" %}
+          <form action="/remove_trainer" method="post">
+            <button type="submit" class="btn-remove">Remove Trainer</button>
+          </form>
+        {% else %}
+          <form action="/assign_trainer" method="post">
+            <input type="hidden" name="trainer_name" value="Jamie Fit"/>
+            <button type="submit" class="btn-assign">Assign Trainer</button>
+          </form>
+        {% endif %}
+      </div>
+
+
+      <!-- ------------------------------------------------------------ -->
+      <!-- Trainer: Jordan Lean -->
+      <!-- ------------------------------------------------------------ -->
+      <div class="trainer-card">
+        <img
+          src="/images/trainers/jordan_lean.jpg"
+          alt="Photo of Jordan Lean"
+          class="trainer-img"
+        />
+        <div class="overlay">
+          <div><strong>Age:</strong> 27 years</div>
+          <div><strong>Experience:</strong> 5 years</div>
+          <div><strong>Specialty:</strong> Bodyweight Training</div>
+        </div>
+        <div class="trainer-name">Jordan Lean</div>
+
+        {% if trainer_name == "Jordan Lean" %}
+          <form action="/remove_trainer" method="post">
+            <button type="submit" class="btn-remove">Remove Trainer</button>
+          </form>
+        {% else %}
+          <form action="/assign_trainer" method="post">
+            <input type="hidden" name="trainer_name" value="Jordan Lean"/>
+            <button type="submit" class="btn-assign">Assign Trainer</button>
+          </form>
+        {% endif %}
+      </div>
+
+
+      <!-- ------------------------------------------------------------ -->
+      <!-- Trainer: Morgan Flex -->
+      <!-- ------------------------------------------------------------ -->
+      <div class="trainer-card">
+        <img
+          src="/images/trainers/morgan_flex.png"
+          alt="Photo of Morgan Flex"
+          class="trainer-img"
+        />
+        <div class="overlay">
+          <div><strong>Age:</strong> 31 years</div>
+          <div><strong>Experience:</strong> 9 years</div>
+          <div><strong>Specialty:</strong> Functional Fitness</div>
+        </div>
+        <div class="trainer-name">Morgan Flex</div>
+
+        {% if trainer_name == "Morgan Flex" %}
+          <form action="/remove_trainer" method="post">
+            <button type="submit" class="btn-remove">Remove Trainer</button>
+          </form>
+        {% else %}
+          <form action="/assign_trainer" method="post">
+            <input type="hidden" name="trainer_name" value="Morgan Flex"/>
+            <button type="submit" class="btn-assign">Assign Trainer</button>
+          </form>
+        {% endif %}
+      </div>
+
+
+      <!-- ------------------------------------------------------------ -->
+      <!-- Trainer: Taylor Strong -->
+      <!-- ------------------------------------------------------------ -->
+      <div class="trainer-card">
+        <img
+          src="/images/trainers/taylor_strong.jpg"
+          alt="Photo of Taylor Strong"
+          class="trainer-img"
+        />
+        <div class="overlay">
+          <div><strong>Age:</strong> 38 years</div>
+          <div><strong>Experience:</strong> 14 years</div>
+          <div><strong>Specialty:</strong> HIIT & Cardio</div>
+        </div>
+        <div class="trainer-name">Taylor Strong</div>
+
+        {% if trainer_name == "Taylor Strong" %}
+          <form action="/remove_trainer" method="post">
+            <button type="submit" class="btn-remove">Remove Trainer</button>
+          </form>
+        {% else %}
+          <form action="/assign_trainer" method="post">
+            <input type="hidden" name="trainer_name" value="Taylor Strong"/>
+            <button type="submit" class="btn-assign">Assign Trainer</button>
+          </form>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      const sb = document.getElementById("mySidebar");
+      sb.style.width = sb.style.width === "250px" ? "0" : "250px";
+    }
+    // Close mobile sidebar when clicking outside
+    document.addEventListener("click", (e) => {
+      const sb = document.getElementById("mySidebar");
+      const btn = document.querySelector(".menu-btn");
+      if (
+        sb.style.width === "250px" &&
+        !sb.contains(e.target) &&
+        !btn.contains(e.target)
+      ) {
+        sb.style.width = "0";
+      }
+    });
+  </script>
+</body>
+</html>
+
+<!-- ========== DAILYBOT CHATBOT SNIPPET ========== -->
+<!-- Add this CSS to your existing <style> section -->
+<style>
+/* ---------- Chatbot Styles ---------- */
+.chatbot-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--primary, #ff6b6b);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  z-index: 1001;
+}
+
+.chat-window {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 300px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 1001;
+}
+
+.chat-header {
+  background: var(--dark-bg, #121212);
+  color: var(--text-light, #f9f9f9);
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 1rem;
+  height: 200px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.chat-messages p {
+  margin-bottom: 0.5rem;
+}
+
+.chat-input {
+  display: flex;
+  border-top: 1px solid #ccc;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  font-size: 1rem;
+}
+
+.chat-input button {
+  background: var(--primary, #ff6b6b);
+  color: #fff;
+  border: none;
+  padding: 0 1rem;
+  cursor: pointer;
+}
+</style>
+
+<!-- Add this HTML to your page body, before closing </body> tag -->
+<button class="chatbot-button" onclick="toggleChat()">💬</button>
+
+<div id="chatWindow" class="chat-window">
+  <div class="chat-header">Ask DailyBot</div>
+  <div id="chatMessages" class="chat-messages"></div>
+  <div class="chat-input">
+    <input type="text" id="chatInput" placeholder="Type your question..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<!-- Add this JavaScript to your existing <script> section or create new one -->
+<script>
+let chatOpened = false;
+
+function toggleChat() {
+  const cw = document.getElementById("chatWindow");
+  const showing = cw.style.display === "flex";
+  cw.style.display = showing ? "none" : "flex";
+  if (!chatOpened && !showing) {
+    chatOpened = true;
+    setTimeout(() => {
+      const box = document.getElementById("chatMessages");
+      const msg = document.createElement("p");
+      msg.innerHTML = "<strong>Bot:</strong> Hello! Welcome to DailyFit. How can I assist you today?";
+      box.appendChild(msg);
+      box.scrollTop = box.scrollHeight;
+    }, 300);
+  }
+}
+
+function sendMessage() {
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+  if (!text) return;
+  const box = document.getElementById("chatMessages");
+  const you = document.createElement("p");
+  you.innerHTML = `<strong>You:</strong> ${text}`;
+  box.appendChild(you);
+  input.value = "";
+  fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: text })
+  })
+  .then(res => res.json())
+  .then(data => {
+    const bot = document.createElement("p");
+    bot.innerHTML = `<strong>Bot:</strong> ${data.reply}`;
+    box.appendChild(bot);
+    box.scrollTop = box.scrollHeight;
+  })
+  .catch(err => {
+    const bot = document.createElement("p");
+    bot.innerHTML = `<strong>Bot:</strong> Sorry, I'm having trouble responding right now. Please try again later.`;
+    box.appendChild(bot);
+    box.scrollTop = box.scrollHeight;
+  });
+}
+
+// Allow Enter key to send message
+document.getElementById("chatInput").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") {
+    sendMessage();
+  }
+});
+</script>
