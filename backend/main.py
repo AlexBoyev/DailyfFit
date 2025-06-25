@@ -8,7 +8,7 @@ backend/main.py – DailyFit Gym backend
 • Personal Trainer assignment
 """
 import sys
-
+from populate_database import get_class_details, create_class_registration
 import populate_database
 import os
 import requests
@@ -546,22 +546,58 @@ def dailyfit_assistant(request: Request):
 # ────────────────────────────────────────────────────────────────────
 
 def check_and_populate():
-    """Check user count and populate if needed"""
+    """
+    1) Seed up to 30 users if needed.
+    2) Re-date all existing ClassRegistrations into this week
+       so that registrations show up in the current schedule.
+    """
     try:
         conn = get_connection()
-        cur = conn.cursor()
+        cur  = conn.cursor()
+
+        # 1) Seed users if <30
         cur.execute('SELECT COUNT(*) FROM Users WHERE role="user"')
         count = cur.fetchone()[0]
-
         if count < 30:
-            print(f"⚠️ Only {count} users found. Populating database...")
-            populate_database.main()  # Directly call the population function
+            print(f"⚠️ Only {count} users found. Populating database…")
+            populate_database.main()
         else:
-            print(f"✅ Found {count} users - database ready")
+            print(f"✅ Found {count} users — database ready")
+
+        # 2) Shift every registration into this week
+        print("🔄 Re-dating all class registrations to this week’s schedule…")
+        # Calculate this week’s Monday
+        today       = date.today()
+        this_monday = today - timedelta(days=today.weekday())
+
+        # Map schedule_day → offset from Monday
+        day_offsets = {
+            "monday":    0,
+            "tuesday":   1,
+            "wednesday": 2,
+            "thursday":  3,
+            "friday":    4,
+            "saturday":  5,
+            "sunday":    6,
+        }
+
+        # For each day, update all registrations for classes on that day
+        for day, offset in day_offsets.items():
+            new_date = this_monday + timedelta(days=offset)
+            cur.execute("""
+                UPDATE ClassRegistrations AS cr
+                JOIN Classes AS c ON cr.class_id = c.id
+                SET cr.date = %s
+                WHERE c.schedule_day = %s
+            """, (new_date, day))
+
+        conn.commit()
+        print("✅ Class registrations re-dated successfully.")
 
     except Exception as e:
-        print(f"❌ Database check failed: {str(e)}")
+        print(f"❌ Database init/refresh failed: {e}")
         sys.exit(1)
+
     finally:
         if 'conn' in locals() and conn.is_connected():
             cur.close()
