@@ -25,7 +25,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from jose import jwt, JWTError
-
+from passlib.hash import bcrypt
 from services import UserService, ClassService
 from chatbot import get_bot_response
 from database import get_connection
@@ -541,36 +541,84 @@ app.include_router(llama_router, prefix="/api/llama")
 def dailyfit_assistant(request: Request):
     return templates.TemplateResponse("dailyfit_assistant.html", {"request": request})
 
+
+@app.get("/admin", response_class=HTMLResponse)
+def admin_page(request: Request):
+    # 1) Must be logged in
+    token = request.cookies.get("token")
+    email = jwt_email(token)
+    if not email:
+        return RedirectResponse("/login", 302)
+
+    # 2) Check role in DB
+    conn = get_connection()
+    cur  = conn.cursor()
+    cur.execute("SELECT role FROM Users WHERE email=%s", (email,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    # 3) Only 'admin' can proceed
+    if not row or row[0] != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    # 4) Render the admin_page.html template
+    return templates.TemplateResponse(
+        "admin_page.html",
+        {"request": request, "is_logged_in": True}
+    )
+
 # ────────────────────────────────────────────────────────────────────
 # 12. Dev entry-point
 # ────────────────────────────────────────────────────────────────────
 
 def check_and_populate():
     """
-    1) Seed up to 30 users if needed.
-    2) Re-date all existing ClassRegistrations into this week
-       so that registrations show up in the current schedule.
+    1) Ensure Admin/admin@admin.com exists
+    2) Seed up to 30 demo users if needed
+    3) Shift all ClassRegistrations into this week’s schedule
     """
     try:
         conn = get_connection()
         cur  = conn.cursor()
 
-        # 1) Seed users if <30
-        cur.execute('SELECT COUNT(*) FROM Users WHERE role="user"')
-        count = cur.fetchone()[0]
-        if count < 30:
-            print(f"⚠️ Only {count} users found. Populating database…")
+        # 1) Ensure Admin/admin@admin.com
+        cur.execute(
+            "SELECT COUNT(*) FROM Users WHERE role='admin' AND email=%s",
+            ("admin@admin.com",)
+        )
+        if cur.fetchone()[0] == 0:
+            pw_hash = bcrypt.hash("Admin")
+            cur.execute("""
+                INSERT INTO Users
+                  (name, email, password_hash, role, address, phone)
+                VALUES (%s,   %s,    %s,            %s,   %s,      %s)
+            """, (
+                "Admin",               # name
+                "admin@admin.com",     # email
+                pw_hash,               # hashed password
+                "admin",               # role
+                "",                    # address
+                ""                     # phone
+            ))
+            conn.commit()
+            print("✅ Admin user created: admin@admin.com / Admin")
+
+        # 2) Seed up to 30 regular users
+        cur.execute("SELECT COUNT(*) FROM Users WHERE role='user'")
+        user_count = cur.fetchone()[0]
+        if user_count < 30:
+            print(f"⚠️ Only {user_count} users found. Populating database…")
             populate_database.main()
         else:
-            print(f"✅ Found {count} users — database ready")
+            print(f"✅ Found {user_count} users — database ready")
 
-        # 2) Shift every registration into this week
+        # 3) Re-date all registrations into this week
         print("🔄 Re-dating all class registrations to this week’s schedule…")
-        # Calculate this week’s Monday
         today       = date.today()
-        this_monday = today - timedelta(days=today.weekday())
+        week_start  = today - timedelta(days=today.weekday())  # Monday
 
-        # Map schedule_day → offset from Monday
+        # map schedule_day → offset from Monday
         day_offsets = {
             "monday":    0,
             "tuesday":   1,
@@ -581,12 +629,12 @@ def check_and_populate():
             "sunday":    6,
         }
 
-        # For each day, update all registrations for classes on that day
         for day, offset in day_offsets.items():
-            new_date = this_monday + timedelta(days=offset)
+            new_date = week_start + timedelta(days=offset)
             cur.execute("""
                 UPDATE ClassRegistrations AS cr
-                JOIN Classes AS c ON cr.class_id = c.id
+                JOIN Classes AS c
+                  ON cr.class_id = c.id
                 SET cr.date = %s
                 WHERE c.schedule_day = %s
             """, (new_date, day))
