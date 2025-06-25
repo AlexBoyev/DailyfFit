@@ -7,7 +7,9 @@ backend/main.py – DailyFit Gym backend
 • Class registration (current + next week) with per-date capacity
 • Personal Trainer assignment
 """
+import sys
 
+import populate_database
 import os
 import requests
 from pathlib import Path
@@ -110,11 +112,32 @@ def about(request: Request):
         {"request": request, "is_logged_in": bool(jwt_email(request.cookies.get("token")))}
     )
 
+@app.get("/purchase_program", response_class=HTMLResponse)
+def purchase_program(request: Request):
+    return templates.TemplateResponse(
+        "purchase_program.html",
+        {"request": request, "is_logged_in": bool(jwt_email(request.cookies.get("token")))}
+    )
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard(request: Request):
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {"request": request, "is_logged_in": bool(jwt_email(request.cookies.get("token")))}
+    )
+
 @app.get("/login", response_class=HTMLResponse)
 def login_page(request: Request):
     return templates.TemplateResponse(
         "login.html",
         {"request": request, "site_key": SITE_KEY, "captcha_enabled": CAPTCHA_ON}
+    )
+
+@app.get("/personal_trainer", response_class=HTMLResponse)
+def personal_trainer(request: Request):
+    return templates.TemplateResponse(
+        "personal_trainer.html",
+        {"request": request, "is_logged_in": bool(jwt_email(request.cookies.get("token")))}
     )
 
 @app.post("/login")
@@ -526,5 +549,32 @@ def dailyfit_assistant(request: Request):
 # ────────────────────────────────────────────────────────────────────
 # 12. Dev entry-point
 # ────────────────────────────────────────────────────────────────────
+
+def check_and_populate():
+    """Check user count and populate if needed"""
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT COUNT(*) FROM Users WHERE role="user"')
+        count = cur.fetchone()[0]
+
+        if count < 30:
+            print(f"⚠️ Only {count} users found. Populating database...")
+            populate_database.main()  # Directly call the population function
+        else:
+            print(f"✅ Found {count} users - database ready")
+
+    except Exception as e:
+        print(f"❌ Database check failed: {str(e)}")
+        sys.exit(1)
+    finally:
+        if 'conn' in locals() and conn.is_connected():
+            cur.close()
+            conn.close()
+
+
+# Run check before launching app
+check_and_populate()
+
 if __name__ == "__main__":
     uvicorn.run("backend.main:app", host="127.0.0.1", port=8001, reload=True)

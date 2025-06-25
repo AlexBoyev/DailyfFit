@@ -7,4 +7,6 @@ python-jose[cryptography]
 fastapi[all]
 jinja2
 requests
+Faker>=24.0.0
+python-dotenv>=1.0.0
 
