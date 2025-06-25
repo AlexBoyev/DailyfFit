@@ -135,9 +135,46 @@ def login_page(request: Request):
 
 @app.get("/personal_trainer", response_class=HTMLResponse)
 def personal_trainer(request: Request):
+    """
+    Display all trainers (loaded from /frontend/images/trainers/) and
+    show which one (if any) is currently assigned to the logged-in user.
+    """
+    email = jwt_email(request.cookies.get("token"))
+    if not email:
+        return RedirectResponse("/login", 302)
+
+    # Build a list of trainers by scanning the directory
+    trainers = []
+    trainers_dir = WEB / "images" / "trainers"
+    if trainers_dir.exists():
+        for img_path in trainers_dir.iterdir():
+            if img_path.is_file():
+                # Derive a display name from the filename (e.g., "john_doe.jpg" → "John Doe")
+                name = img_path.stem.replace("_", " ").title()
+                img_url = f"/images/trainers/{img_path.name}"
+                description = f"{name} is a certified personal trainer."
+                trainers.append({
+                    "name": name,
+                    "img": img_url,
+                    "description": description
+                })
+
+    # Fetch the currently assigned trainer for this user (using trainer_name column)
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT trainer_name FROM Users WHERE email=%s", (email,))
+    row = cur.fetchone()
+    current_trainer = row[0] if row and row[0] else None
+    cur.close()
+    conn.close()
+
     return templates.TemplateResponse(
         "personal_trainer.html",
-        {"request": request, "is_logged_in": bool(jwt_email(request.cookies.get("token")))}
+        {
+            "request": request,
+            "trainers": trainers,
+            "trainer_name": current_trainer
+        }
     )
 
 @app.post("/login")
@@ -450,49 +487,7 @@ def unregister_class(request: Request,
 # ────────────────────────────────────────────────────────────────────
 # 10. Personal Trainer endpoints
 # ────────────────────────────────────────────────────────────────────
-@app.get("/personal_trainer", response_class=HTMLResponse)
-def personal_trainer(request: Request):
-    """
-    Display all trainers (loaded from /frontend/images/trainers/) and
-    show which one (if any) is currently assigned to the logged-in user.
-    """
-    email = jwt_email(request.cookies.get("token"))
-    if not email:
-        return RedirectResponse("/login", 302)
 
-    # Build a list of trainers by scanning the directory
-    trainers = []
-    trainers_dir = WEB / "images" / "trainers"
-    if trainers_dir.exists():
-        for img_path in trainers_dir.iterdir():
-            if img_path.is_file():
-                # Derive a display name from the filename (e.g., "john_doe.jpg" → "John Doe")
-                name = img_path.stem.replace("_", " ").title()
-                img_url = f"/images/trainers/{img_path.name}"
-                description = f"{name} is a certified personal trainer."
-                trainers.append({
-                    "name": name,
-                    "img": img_url,
-                    "description": description
-                })
-
-    # Fetch the currently assigned trainer for this user (using trainer_name column)
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT trainer_name FROM Users WHERE email=%s", (email,))
-    row = cur.fetchone()
-    current_trainer = row[0] if row and row[0] else None
-    cur.close()
-    conn.close()
-
-    return templates.TemplateResponse(
-        "personal_trainer.html",
-        {
-            "request": request,
-            "trainers": trainers,
-            "trainer_name": current_trainer
-        }
-    )
 
 @app.post("/assign_trainer")
 def assign_trainer(request: Request, trainer_name: str = Form(...)):
