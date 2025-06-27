@@ -121,6 +121,35 @@ def purchase_program(request: Request):
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
+    """
+    Normal users land on /dashboard.
+    Admins are redirected to /admin.
+    """
+    token = request.cookies.get("token")
+    email = jwt_email(token)
+    if not email:
+        return RedirectResponse("/login", 302)
+
+    # look-up the user’s role
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT role FROM Users WHERE email=%s", (email,))
+    role = cur.fetchone()[0] if cur.rowcount else None
+    cur.close()
+    conn.close()
+
+    # send admins to the admin page
+    if role == "admin":
+        return RedirectResponse("/admin", 302)
+
+    # everyone else gets the regular dashboard
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {"request": request, "is_logged_in": True}
+    )
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard(request: Request):
     return templates.TemplateResponse(
         "dashboard.html",
         {"request": request, "is_logged_in": bool(jwt_email(request.cookies.get("token")))}
@@ -509,6 +538,7 @@ def assign_trainer(request: Request, trainer_name: str = Form(...)):
     conn.close()
 
     return RedirectResponse("/personal_trainer", 303)
+
 
 @app.post("/remove_trainer")
 def remove_trainer(request: Request):
