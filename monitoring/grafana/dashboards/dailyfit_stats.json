@@ -1,0 +1,51 @@
+{
+  "uid": "dailyfit-stats",
+  "title": "DailyFit  •  Plans & Classes",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "barchart",
+      "title": "Membership Plans — Popularity",
+      "datasource": { "type": "mysql", "uid": "dailyfit-mysql" },
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT membership_plan AS Plan, COUNT(*) AS Members\nFROM Users\nGROUP BY membership_plan\nORDER BY Members DESC;"
+        }
+      ],
+      "options": {
+        "orientation": "auto",
+        "showValue": "auto"
+      },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 10 }
+    },
+    {
+      "id": 2,
+      "type": "barchart",
+      "title": "Class Registrations",
+      "datasource": { "type": "mysql", "uid": "dailyfit-mysql" },
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT C.name AS Class, COUNT(*) AS Registrations\nFROM ClassRegistrations R\nJOIN Classes C ON C.id = R.class_id\nGROUP BY Class\nORDER BY Registrations DESC;"
+        }
+      ],
+      "options": {
+        "orientation": "auto",
+        "showValue": "auto"
+      },
+      "fieldConfig": {
+        "defaults": { "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 10 }
+    }
+  ]
+}

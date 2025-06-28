@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>User Management — DailyFit</title>
+
+  <!-- same font used in admin_page.html -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet"/>
+
+  <!-- minimal, self-contained styling (colors copied from admin_page.html) -->
+  <style>
+    :root{
+      --primary:#ff6b6b;     /* buttons / links */
+      --dark-bg:#121212;     /* header background */
+      --text-light:#fafafa;  /* header text */
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      font-family:'Poppins',sans-serif;
+      background:#f5f5f5;color:#333;min-height:100vh;
+    }
+
+    /* ---------- header ---------- */
+    header{
+      position:fixed;top:0;left:0;width:100%;z-index:10;
+      display:flex;justify-content:space-between;align-items:center;
+      background:var(--dark-bg);color:var(--text-light);padding:1rem 2rem;
+    }
+    .header-left{display:flex;align-items:center}
+    .menu-btn{
+      background:none;border:none;color:var(--text-light);
+      font-size:1.6rem;cursor:pointer
+    }
+    .logo{margin-left:12px;text-decoration:none;color:var(--text-light);font-weight:600}
+    nav.desktop-nav a{
+      margin-left:1.5rem;color:var(--text-light);text-decoration:none;font-size:.95rem
+    }
+    nav.desktop-nav a:hover{color:var(--primary)}
+
+    /* ---------- sidebar ---------- */
+    .sidebar{
+      position:fixed;top:0;left:0;height:100%;width:0;
+      background:#333;padding-top:70px;overflow-x:hidden;transition:.3s;z-index:9;
+    }
+    .sidebar a{
+      display:block;padding:1rem 1.5rem;font-size:1rem;color:#f1f1f1;text-decoration:none
+    }
+    .sidebar a:hover{background:#575757}
+
+    /* ---------- main content ---------- */
+    main{margin-top:70px;padding:2rem}
+    h2{margin-bottom:1rem}
+
+    /* simple card-style row for the add-user form */
+    .card{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;margin-bottom:2rem}
+    .card input,.card select{
+      padding:.55rem .75rem;font:inherit;border:1px solid #ccc;border-radius:4px
+    }
+    .primary-btn{
+      background:var(--primary);color:#fff;border:none;
+      padding:.55rem 1.1rem;border-radius:4px;cursor:pointer
+    }
+    .danger-btn{
+      background:#e63946;color:#fff;border:none;
+      padding:.4rem .9rem;border-radius:4px;cursor:pointer
+    }
+
+    /* table */
+    table{
+      width:100%;border-collapse:collapse;background:#fff;
+      box-shadow:0 2px 6px rgba(0,0,0,.1)
+    }
+    thead{background:var(--dark-bg);color:var(--text-light)}
+    th,td{padding:.75rem 1rem;text-align:left}
+    tbody tr:nth-child(odd){background:#fafafa}
+    td select{
+      padding:.35rem .6rem;font:inherit;border:1px solid #bbb;border-radius:4px
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ---------- header ---------- -->
+  <header>
+    <div class="header-left">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <a class="logo">DailyFit</a>
+    </div>
+    <h1>User Management</h1>
+    <nav class="desktop-nav">
+      <a href="/dashboard">Home</a>
+      <a href="/logout">Logout</a>
+    </nav>
+  </header>
+
+  <!-- ---------- sidebar ---------- -->
+  <div id="mySidebar" class="sidebar">
+    <a href="/admin">Admin Home</a>
+    <a href="/admin/users">Manage Users</a>
+    <a href="/admin/reports">Reports</a>
+  </div>
+
+  <!-- ---------- main ---------- -->
+  <main>
+    <!-- add user -->
+    <h2>Add new user</h2>
+    <form method="post" action="/admin/users/add" class="card">
+      <input  name="email"        type="email" placeholder="E-mail"    required>
+      <input  name="full_name"    type="text"  placeholder="Full name" required>
+      <select name="membership_plan">
+        <option value="Free membership">Free membership</option>
+        <option value="Bronze">Bronze</option>
+        <option value="Silver">Silver</option>
+        <option value="Gold">Gold</option>
+        <option value="Platinum">Platinum</option>
+      </select>
+      <button type="submit" class="primary-btn">Add</button>
+    </form>
+
+    <!-- user table -->
+    <h2>Existing users</h2>
+    <table>
+      <thead>
+        <tr><th>Email</th><th>Full&nbsp;name</th><th>Plan</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+      {% for u in users %}
+        <tr>
+          <td>{{ u.email }}</td>
+          <td>{{ u.full_name }}</td>
+          <td>
+            <form method="post" action="/admin/users/{{ u.email }}/update">
+              <select name="membership_plan" onchange="this.form.submit()">
+                {% set default_plans = ['Free membership','Bronze','Silver','Gold','Platinum'] %}
+                {% for p in default_plans %}
+                  <option value="{{ p }}"
+                          {% if p == (u.membership_plan | default('Free membership')) %}selected{% endif %}>
+                    {{ p }}
+                  </option>
+                {% endfor %}
+                {# in case DB has a plan outside the default list #}
+                {% if u.membership_plan not in default_plans %}
+                  <option value="{{ u.membership_plan }}" selected>{{ u.membership_plan }}</option>
+                {% endif %}
+              </select>
+            </form>
+          </td>
+          <td>
+            <form method="post"
+                  action="/admin/users/{{ u.email }}/delete"
+                  onsubmit="return confirm('Delete {{ u.email }}?');">
+              <button type="submit" class="danger-btn">Delete</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </main>
+
+  <!-- sidebar toggle (identical to admin_page.html) -->
+  <script>
+    function toggleSidebar(){
+      const sb=document.getElementById('mySidebar');
+      sb.style.width = sb.style.width==='250px' ? '0' : '250px';
+    }
+    document.addEventListener('click',e=>{
+      const sb=document.getElementById('mySidebar');
+      const btn=document.querySelector('.menu-btn');
+      if(sb.style.width==='250px' && !sb.contains(e.target) && !btn.contains(e.target)){
+        sb.style.width='0';
+      }
+    });
+  </script>
+</body>
+</html>

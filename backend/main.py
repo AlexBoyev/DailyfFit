@@ -119,6 +119,7 @@ def purchase_program(request: Request):
         {"request": request, "is_logged_in": bool(jwt_email(request.cookies.get("token")))}
     )
 
+
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
     """
@@ -572,6 +573,31 @@ def dailyfit_assistant(request: Request):
     return templates.TemplateResponse("dailyfit_assistant.html", {"request": request})
 
 
+def require_admin(request: Request) -> str:
+    """
+    • Ensures the caller is logged in AND has role='admin'.
+    • Returns the caller’s e-mail on success.
+    • Otherwise raises 303 redirect (to /login) or 403 Not authorized.
+    """
+    token = request.cookies.get("token")
+    email = jwt_email(token)
+    if not email:
+        # Not logged-in ⇒ send to login page
+        raise HTTPException(status_code=303,
+                            headers={"Location": "/login"})
+
+    conn = get_connection()
+    cur  = conn.cursor()
+    cur.execute("SELECT role FROM Users WHERE email=%s", (email,))
+    row  = cur.fetchone()
+    cur.close(); conn.close()
+
+    if not row or row[0] != "admin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    return email
+
+
 @app.get("/admin", response_class=HTMLResponse)
 def admin_page(request: Request):
     # 1) Must be logged in
@@ -597,6 +623,80 @@ def admin_page(request: Request):
         "admin_page.html",
         {"request": request, "is_logged_in": True}
     )
+
+
+@app.get("/admin/reports")
+def admin_reports_redirect(request: Request):
+    require_admin(request)                                  # keep your guard
+
+    GRAFANA_LOGIN = (
+        "http://localhost:3030/login"
+        "?redirectTo=http://localhost:8001/admin"           # ← add this
+    )
+    return RedirectResponse(GRAFANA_LOGIN, status_code=302)
+@app.get("/admin/users", response_class=HTMLResponse)
+def admin_users_page(request: Request):
+    require_admin(request)
+
+    conn = get_connection()
+    # For mysql-connector:
+    cur  = conn.cursor(dictionary=True)
+    # For PyMySQL use:
+    # cur = conn.cursor(pymysql.cursors.DictCursor)
+
+    cur.execute("""
+        SELECT
+            email,
+            name                         AS full_name,
+            COALESCE(membership_plan,'Free membership') AS membership_plan
+        FROM Users
+        ORDER BY email
+    """)
+    users = cur.fetchall()
+    cur.close(); conn.close()
+
+    return templates.TemplateResponse(
+        "user_management.html",
+        {"request": request, "users": users, "is_logged_in": True}
+    )
+
+
+# ---------- 2. Add user ----------
+@app.post("/admin/users/add")
+def admin_add_user(request: Request,
+                   email: str = Form(...),
+                   full_name: str = Form(...),
+                   membership_plan: str = Form("Free membership")):
+    require_admin(request)
+    conn = get_connection(); cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO Users (email, name, membership_plan, role, password_hash)
+        VALUES (%s, %s, %s, 'user', '')
+    """, (email, full_name, membership_plan))
+    conn.commit(); cur.close(); conn.close()
+    return RedirectResponse("/admin/users", status_code=303)
+
+
+# ---------- 3. Update plan ----------
+@app.post("/admin/users/{email}/update")
+def admin_update_user(email: str,
+                      request: Request,
+                      membership_plan: str = Form(...)):
+    require_admin(request)
+    conn = get_connection(); cur = conn.cursor()
+    cur.execute("UPDATE Users SET membership_plan=%s WHERE email=%s",
+                (membership_plan, email))
+    conn.commit(); cur.close(); conn.close()
+    return RedirectResponse("/admin/users", status_code=303)
+
+# ---------- 4. Delete user ----------
+@app.post("/admin/users/{email}/delete")
+def admin_delete_user(email: str, request: Request):
+    require_admin(request)
+    conn = get_connection(); cur = conn.cursor()
+    cur.execute("DELETE FROM Users WHERE email=%s", (email,))
+    conn.commit(); cur.close(); conn.close()
+    return RedirectResponse("/admin/users", status_code=303)
 
 # ────────────────────────────────────────────────────────────────────
 # 12. Dev entry-point
@@ -682,8 +782,39 @@ def check_and_populate():
             conn.close()
 
 
+def verify_monitoring() -> None:
+    """
+    Print a friendly status message about Prometheus + Grafana.
+
+    Works whether is_container_running() returns:
+      • bool   – True = OK, False = at least one missing
+      • list / set of running names
+      • dict   – {name: bool}
+    """
+    try:
+        result = is_container_running()            # zero-arg helper
+    except Exception as exc:
+        print(f"⚠️  Could not verify monitoring stack ({exc}).")
+        return
+
+    # ── normalise ────────────────────────────────────────────────
+    if isinstance(result, bool):
+        all_running = result
+    elif isinstance(result, dict):
+        all_running = all(result.get(name, False) for name in ("prometheus", "grafana"))
+    else:  # assume iterable of names
+        running = set(result)
+        all_running = running.issuperset({"prometheus", "grafana"})
+
+    # ── report ──────────────────────────────────────────────────
+    if all_running:
+        print("✅ Prometheus & Grafana are up – happy charting!")
+    else:
+        print("⚠️  Monitoring containers not running.")
+        print("   → Run: docker compose up -d prometheus grafana")
 # Run check before launching app
 check_and_populate()
+verify_monitoring()
 
 if __name__ == "__main__":
     uvicorn.run("backend.main:app", host="127.0.0.1", port=8001, reload=True)
