@@ -149,6 +149,3 @@ The backend exposes `/chat` which pipes authenticated user data (nutrition logs,
 
 Distributed under the **MIT License**. See `LICENSE` for details.
 
----
-
-<div align="center">Made with ❤️ and 🧠 in Beer Sheva</div>
