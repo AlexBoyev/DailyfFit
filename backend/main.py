@@ -8,7 +8,6 @@ backend/main.py – DailyFit Gym backend
 • Personal Trainer assignment
 """
 import sys
-from populate_database import get_class_details, create_class_registration
 import populate_database
 import os
 import requests
@@ -129,31 +128,27 @@ def dashboard(request: Request):
     token = request.cookies.get("token")
     email = jwt_email(token)
     if not email:
-        return RedirectResponse("/login", 302)
+        # Not logged in → force login
+        return RedirectResponse("/login", status_code=302)
 
-    # look-up the user’s role
+    # Lookup the user’s role
     conn = get_connection()
-    cur = conn.cursor()
+    cur = conn.cursor(buffered=True)  # buffered cursor to avoid unread-result errors
     cur.execute("SELECT role FROM Users WHERE email=%s", (email,))
-    role = cur.fetchone()[0] if cur.rowcount else None
+    result = cur.fetchone()
     cur.close()
     conn.close()
 
-    # send admins to the admin page
-    if role == "admin":
-        return RedirectResponse("/admin", 302)
+    role = result[0] if result else None
 
-    # everyone else gets the regular dashboard
+    # Admins go to the admin interface
+    if role == "admin":
+        return RedirectResponse("/admin", status_code=302)
+
+    # Everyone else sees the normal dashboard
     return templates.TemplateResponse(
         "dashboard.html",
         {"request": request, "is_logged_in": True}
-    )
-
-@app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request):
-    return templates.TemplateResponse(
-        "dashboard.html",
-        {"request": request, "is_logged_in": bool(jwt_email(request.cookies.get("token")))}
     )
 
 @app.get("/login", response_class=HTMLResponse)
@@ -210,11 +205,29 @@ def personal_trainer(request: Request):
 @app.post("/login")
 async def login_post(request: Request):
     data = await request.json()
+    # CAPTCHA check (if enabled)
     if not verify_recaptcha(data.get("g-recaptcha-response", "")):
         raise HTTPException(status_code=403, detail="CAPTCHA failed")
-    result = UserService().login(data["email"], data["password"])
-    resp = JSONResponse(content=result)
-    resp.set_cookie("token", result["token"], httponly=True, samesite="Lax", secure=False, path="/")
+
+    # Perform login: should return a dict with at least {"token", "name", "role"}
+    user_data = UserService().login(data["email"], data["password"])
+
+    # Build the response JSON including role
+    content = {
+        "token": user_data["token"],
+        "name": user_data["name"],
+        "role":  user_data.get("role", "user")
+    }
+
+    resp = JSONResponse(content=content)
+    resp.set_cookie(
+        "token",
+        content["token"],
+        httponly=True,
+        samesite="Lax",
+        secure=False,
+        path="/"
+    )
     return resp
 
 @app.get("/logout")
@@ -256,9 +269,6 @@ async def auth_guard(request: Request, call_next):
 # ────────────────────────────────────────────────────────────────────
 # 7. Dashboard & purchase program
 # ────────────────────────────────────────────────────────────────────
-@app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request):
-    return templates.TemplateResponse("dashboard.html", {"request": request})
 
 @app.get("/purchase_program", response_class=HTMLResponse)
 def purchase_program(request: Request):
@@ -817,4 +827,4 @@ check_and_populate()
 verify_monitoring()
 
 if __name__ == "__main__":
-    uvicorn.run("backend.main:app", host="127.0.0.1", port=8001, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)

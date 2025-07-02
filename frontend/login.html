@@ -108,19 +108,31 @@
       if ({{ 'true' if captcha_enabled else 'false' }} && !token) {
         return document.getElementById('response').innerText = 'Please complete the CAPTCHA.';
       }
+
       const payload = { email, password };
       if (token) payload['g-recaptcha-response'] = token;
 
       try {
         const res = await fetch('/login', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(payload)
         });
         const data = await res.json();
+
         if (res.ok) {
+          // store info
           localStorage.setItem('token', data.token);
           localStorage.setItem('name', data.name);
-          window.location.href = '/dashboard';
+          localStorage.setItem('role', data.role);
+
+          // redirect based on role
+          if (data.role === 'admin') {
+            window.location.href = '/admin';
+          } else {
+            window.location.href = '/dashboard';
+          }
         } else {
           document.getElementById('response').innerText = data.detail || 'Login failed.';
           if ({{ 'true' if captcha_enabled else 'false' }}) grecaptcha.reset();

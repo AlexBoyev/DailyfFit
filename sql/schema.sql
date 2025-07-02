@@ -1,48 +1,46 @@
- schema.sql
- Full database schema for DailyFit with CREATE DATABASE, all tables, constraints, and seed data
-*/
+-- Full database schema for DailyFit with CREATE DATABASE, all tables, constraints, and seed data
 
--- 00: Initialize database
 CREATE DATABASE IF NOT EXISTS `dailyfit`;
 USE `dailyfit`;
 
--- 01: Users table
+-- Users table
 CREATE TABLE IF NOT EXISTS Users (
-    id                    INT AUTO_INCREMENT PRIMARY KEY,
-    name                  VARCHAR(100),
-    email                 VARCHAR(100) UNIQUE,
-    password_hash         VARCHAR(255),
-    role                  ENUM('user','admin'),
-    address               VARCHAR(255),
-    phone                 VARCHAR(50),
-    profile_picture       VARCHAR(255),
-    height_cm             INT,
-    weight_kg             INT,
-    age                   INT,
-    gender                ENUM('male','female','other'),
-    membership_plan       VARCHAR(100) DEFAULT 'Free membership',
-    signup_date           DATETIME DEFAULT CURRENT_TIMESTAMP,
-    last_login            DATETIME,
-    is_active             BOOLEAN DEFAULT TRUE,
-    fitness_level         ENUM('beginner','intermediate','advanced'),
-    medical_conditions    TEXT,
-    preferred_training_time ENUM('morning','afternoon','evening'),
-    trainer_name          VARCHAR(100)
+    id                     INT AUTO_INCREMENT PRIMARY KEY,
+    name                   VARCHAR(100),
+    email                  VARCHAR(100) UNIQUE,
+    password_hash          VARCHAR(255),
+    role                   ENUM('user','admin'),
+    address                VARCHAR(255),
+    phone                  VARCHAR(50),
+    profile_picture        VARCHAR(255),
+    height_cm              INT,
+    weight_kg              INT,
+    age                    INT,
+    gender                 ENUM('male', 'female', 'other'),
+    membership_plan        VARCHAR(100) DEFAULT 'Free membership',
+    signup_date            DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_login             DATETIME,
+    is_active              BOOLEAN DEFAULT TRUE,
+    fitness_level          ENUM('beginner', 'intermediate', 'advanced'),
+    medical_conditions     TEXT,
+    preferred_training_time ENUM('morning', 'afternoon', 'evening'),
+    -- Trainer assignment
+    trainer_name           VARCHAR(100) NULL
 );
 
--- 02: TrainingPlans table
+-- Training plans
 CREATE TABLE IF NOT EXISTS TrainingPlans (
-    id                         INT AUTO_INCREMENT PRIMARY KEY,
-    goal                       VARCHAR(50),
-    description                TEXT,
-    medical_clearance_required BOOLEAN,
-    created_at                 DATETIME DEFAULT CURRENT_TIMESTAMP,
-    difficulty_level           ENUM('beginner','intermediate','advanced'),
-    duration_weeks             INT,
-    sessions_per_week          INT
+    id                             INT AUTO_INCREMENT PRIMARY KEY,
+    goal                           VARCHAR(50),
+    description                    TEXT,
+    medical_clearance_required     BOOLEAN,
+    created_at                     DATETIME DEFAULT CURRENT_TIMESTAMP,
+    difficulty_level               ENUM('beginner', 'intermediate', 'advanced'),
+    duration_weeks                 INT,
+    sessions_per_week              INT
 );
 
--- 03: NutritionMenus table
+-- Nutrition menus
 CREATE TABLE IF NOT EXISTS NutritionMenus (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     user_id         INT,
@@ -51,7 +49,7 @@ CREATE TABLE IF NOT EXISTS NutritionMenus (
     type            ENUM('weight_loss','muscle_gain','fitness'),
     description     TEXT,
     meal_plan       JSON,
-    diet_type       ENUM('vegan','vegetarian','keto','paleo','none'),
+    diet_type       ENUM('vegan', 'vegetarian', 'keto', 'paleo', 'none'),
     protein_grams   INT,
     carbs_grams     INT,
     fat_grams       INT,
@@ -60,7 +58,7 @@ CREATE TABLE IF NOT EXISTS NutritionMenus (
     FOREIGN KEY (user_id) REFERENCES Users(id)
 );
 
--- 04: Classes table
+-- Classes offered
 CREATE TABLE IF NOT EXISTS Classes (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     name            VARCHAR(100),
@@ -68,29 +66,29 @@ CREATE TABLE IF NOT EXISTS Classes (
     instructor      VARCHAR(100),
     capacity        INT,
     duration_mins   INT,
-    difficulty      ENUM('beginner','intermediate','advanced'),
+    difficulty      ENUM('beginner', 'intermediate', 'advanced'),
     schedule_time   TIME,
-    schedule_day    ENUM('monday','tuesday','wednesday','thursday','friday','saturday','sunday'),
+    schedule_day    ENUM('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'),
     room_location   VARCHAR(50),
     is_active       BOOLEAN DEFAULT TRUE,
     created_at      DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 05: ClassRegistrations table
+-- Class registrations
 CREATE TABLE IF NOT EXISTS ClassRegistrations (
     id          INT AUTO_INCREMENT PRIMARY KEY,
     user_id     INT,
     class_id    INT,
     date        DATE,
     status      ENUM('registered','cancelled','attended','missed'),
-    notes       TEXT,
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uniq_user_class_date (user_id,class_id,date),
+    notes       TEXT,
+    UNIQUE KEY uniq_user_class_date (user_id, class_id, date),
     FOREIGN KEY (user_id)  REFERENCES Users(id),
     FOREIGN KEY (class_id) REFERENCES Classes(id)
 );
 
--- 06: UserProgress table
+-- User progress logs
 CREATE TABLE IF NOT EXISTS UserProgress (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     user_id         INT,
@@ -103,7 +101,7 @@ CREATE TABLE IF NOT EXISTS UserProgress (
     FOREIGN KEY (user_id) REFERENCES Users(id)
 );
 
--- 07: WorkoutLogs table
+-- Workout logs
 CREATE TABLE IF NOT EXISTS WorkoutLogs (
     id               INT AUTO_INCREMENT PRIMARY KEY,
     user_id          INT,
@@ -119,12 +117,12 @@ CREATE TABLE IF NOT EXISTS WorkoutLogs (
     FOREIGN KEY (training_plan_id) REFERENCES TrainingPlans(id)
 );
 
--- 08: NutritionLogs table
+-- Nutrition logs
 CREATE TABLE IF NOT EXISTS NutritionLogs (
     id              INT AUTO_INCREMENT PRIMARY KEY,
     user_id         INT,
     date            DATE,
-    meal_type       ENUM('breakfast','lunch','dinner','snack'),
+    meal_type       ENUM('breakfast', 'lunch', 'dinner', 'snack'),
     calories        INT,
     protein_grams   INT,
     carbs_grams     INT,
@@ -134,10 +132,10 @@ CREATE TABLE IF NOT EXISTS NutritionLogs (
     FOREIGN KEY (user_id) REFERENCES Users(id)
 );
 
--- 09: Seed five popular classes if Classes is empty
-INSERT INTO Classes (name,description,instructor,capacity,
-                     duration_mins,difficulty,
-                     schedule_time,schedule_day,room_location)
+-- Seed five popular classes if Classes is empty
+INSERT INTO Classes (name, description, instructor, capacity,
+                     duration_mins, difficulty,
+                     schedule_time, schedule_day, room_location)
 SELECT * FROM (
   SELECT 'Morning HIIT','High-intensity interval workout','Jordan',20,45,'intermediate','06:30','monday','Studio A'
   UNION ALL SELECT 'Power Yoga','Flow yoga session','Ava',15,60,'beginner','18:00','tuesday','Studio B'
