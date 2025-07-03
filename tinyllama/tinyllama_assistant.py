@@ -142,7 +142,7 @@ User question:
 """
 
         payload = {
-            "model": "tinyllama",
+            "model": "gemma3n:latest",
             "prompt": prompt,
             "stream": False,
             "temperature": 0.4
