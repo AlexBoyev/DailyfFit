@@ -187,7 +187,7 @@ def wait_for_ollama(timeout: int = 600):
             print(f"[{time.strftime('%H:%M:%S')}] Attempt {attempt}: error contacting Ollama: {e}")
             model_names = []
         # Check for any model name that starts with "llama2"
-        if any(name.startswith("llama2") for name in model_names):
+        if any(name.startswith("gemma3n") for name in model_names):
             print(f"[{time.strftime('%H:%M:%S')}] Attempt {attempt}: model loaded ({model_names}). Proceeding.")
             return
         print(f"[{time.strftime('%H:%M:%S')}] Attempt {attempt}: still waiting, models found: {model_names}")
