@@ -1,10 +1,7 @@
-# ─────────────────────────────────────────────────────────────────────────────
-#  DailyFit – infrastructure only: MySQL ▪ Prometheus ▪ Grafana ▪ Ollama
-#  Backend (FastAPI) runs on the host, *not* in Docker.
-# ─────────────────────────────────────────────────────────────────────────────
+version: '3.8'
 
 services:
-  # ───────────────────────────────  MySQL 8  ───────────────────────────────
+  # ─────────────────────────────────── MySQL ───────────────────────────────────
   mysql:
     image: mysql:8
     container_name: dailyfit-mysql
@@ -16,52 +13,56 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./sql:/docker-entrypoint-initdb.d            # optional seed scripts
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-u", "root", "-p${DB_PASSWORD}"]
-      interval: 5s
-      timeout: 5s
-      retries: 6
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
-  # ─────────────────────────────  Prometheus  ─────────────────────────────
+  # ────────────────────────────── Prometheus ──────────────────────────────────
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
     restart: always
-    ports:
-      - "9091:9090"
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
     volumes:
-      - ./monitoring/prometheus:/etc/prometheus:ro   # mount entire dir
+      - ./monitoring/prometheus:/etc/prometheus:ro
+    ports:
+      - "9091:9090"    # change to "9091:9090" if host 9090 is already in use
 
-  # ───────────────────────────────  Grafana  ───────────────────────────────
+  # ───────────────────────────────── Grafana ─────────────────────────────────
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
     restart: always
-    depends_on:
-      - prometheus
-    ports:
-      - "3030:3000"        # UI now on http://localhost:3030/
-    env_file:
-      - .env
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-}
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    ports:
+      - "3000:3000"
 
-  # ───────────────────────────────  Ollama  ───────────────────────────────
+  # ────────────────────────────────── Ollama ──────────────────────────────────
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
-    restart: unless-stopped
     ports:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+    entrypoint: >
+      sh -c "
+        # 1) start the Ollama server in the background
+        ollama serve &
 
-# ───────────────────────────────  named volumes  ─────────────────────────────
+        # 2) give it time to initialize
+        echo 'Sleeping 10s for Ollama to start…'
+        sleep 10
+
+        # 3) pull the desired model
+        echo 'Pulling model llama2…'
+        ollama pull gemma3n:latest || exit 1
+
+        # 4) wait on the server process so the container stays alive
+        wait
+      "
+    restart: unless-stopped
+
 volumes:
   mysql_data:
   grafana_data:
