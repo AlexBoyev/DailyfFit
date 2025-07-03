@@ -8,6 +8,8 @@ backend/main.py – DailyFit Gym backend
 • Personal Trainer assignment
 """
 import sys
+import time
+
 import populate_database
 import os
 import requests
@@ -111,6 +113,52 @@ def about(request: Request):
         {"request": request, "is_logged_in": bool(jwt_email(request.cookies.get("token")))}
     )
 
+@app.post("/account_settings")
+async def account_settings_post(
+    request: Request,
+    name: str = Form(...),
+    email: str = Form(...),
+    phone: str = Form(""),
+    address: str = Form(""),
+    profile_picture: UploadFile | None = File(None),
+):
+    # 1. Figure out who’s posting
+    user_ctx = UserService().get_user_data_from_request(request)
+    user_email = user_ctx.get("email")
+    if not user_email:
+        return RedirectResponse("/login", status_code=302)
+
+    # 2. Save uploaded picture (if any)
+    filename = None
+    if profile_picture and profile_picture.filename:
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        filename = f"{int(datetime.utcnow().timestamp())}_{profile_picture.filename}"
+        file_path = UPLOAD_DIR / filename
+        contents = await profile_picture.read()
+        file_path.write_bytes(contents)
+
+    # 3. Update the Users table
+    conn = get_connection()
+    cur = conn.cursor()
+    update_fields = ["name=%s", "email=%s", "phone=%s", "address=%s"]
+    params = [name, email, phone, address]
+    if filename:
+        update_fields.append("profile_picture=%s")
+        params.append(filename)
+    params.append(user_email)  # for WHERE
+    sql = f"""
+      UPDATE Users
+         SET {', '.join(update_fields)}
+       WHERE email=%s
+    """
+    cur.execute(sql, params)
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    # 4. Redirect back to GET
+    return RedirectResponse("/account_settings", status_code=303)
+
 @app.get("/purchase_program", response_class=HTMLResponse)
 def purchase_program(request: Request):
     return templates.TemplateResponse(
@@ -118,6 +166,69 @@ def purchase_program(request: Request):
         {"request": request, "is_logged_in": bool(jwt_email(request.cookies.get("token")))}
     )
 
+def wait_for_ollama(timeout: int = 600):
+    """
+    Polls the Ollama /api/tags endpoint until a model starting with 'llama2'
+    appears (e.g. 'llama2:latest'), or until `timeout` seconds have elapsed.
+    Logs each attempt.
+    """
+    deadline = time.time() + timeout
+    url = "http://localhost:11434/api/tags"
+    attempt = 0
+
+    while time.time() < deadline:
+        attempt += 1
+        try:
+            resp = requests.get(url, timeout=5)
+            resp.raise_for_status()
+            models = resp.json().get("models", [])
+            model_names = [m.get("model", "") for m in models]
+        except Exception as e:
+            print(f"[{time.strftime('%H:%M:%S')}] Attempt {attempt}: error contacting Ollama: {e}")
+            model_names = []
+        # Check for any model name that starts with "llama2"
+        if any(name.startswith("llama2") for name in model_names):
+            print(f"[{time.strftime('%H:%M:%S')}] Attempt {attempt}: model loaded ({model_names}). Proceeding.")
+            return
+        print(f"[{time.strftime('%H:%M:%S')}] Attempt {attempt}: still waiting, models found: {model_names}")
+        time.sleep(10)
+    raise RuntimeError(f"Ollama not ready after {timeout} seconds (10 minutes).")
+
+@app.post("/update_fitness_profile")
+async def update_fitness_profile(
+    request: Request,
+    height_cm: int          = Form(...),
+    weight_kg: int          = Form(...),
+    age: int                = Form(...),
+    gender: str             = Form(...),
+    medical_conditions: str = Form(""),
+):
+    # 1) Identify who’s sending this
+    user_ctx = UserService().get_user_data_from_request(request)
+    email = user_ctx.get("email")
+    if not email:
+        # not logged in → force login
+        return RedirectResponse("/login", status_code=302)
+    # 2) Update only the fitness columns
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        UPDATE Users
+           SET height_cm = %s,
+               weight_kg = %s,
+               age = %s,
+               gender = %s,
+               medical_conditions = %s
+         WHERE email = %s
+        """,
+        (height_cm, weight_kg, age, gender, medical_conditions, email)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    # 3) Send them back to the settings page (you can anchor the tab)
+    return RedirectResponse("/account_settings?tab=fitness", status_code=303)
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request):
@@ -823,8 +934,10 @@ def verify_monitoring() -> None:
         print("⚠️  Monitoring containers not running.")
         print("   → Run: docker compose up -d prometheus grafana")
 # Run check before launching app
+
 check_and_populate()
 verify_monitoring()
+wait_for_ollama()
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)
