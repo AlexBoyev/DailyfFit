@@ -10,7 +10,7 @@
 
 ## 🏋️ Project Overview
 
-**DailyFit** is a full-stack fitness application that lets users
+**DailyFit** is a full-stack fitness application that lets users:
 
 * generate **personalised workout programmes** and **nutrition menus**
 * **book / cancel classes** and track attendance
@@ -23,129 +23,139 @@ Everything runs locally with Docker Compose — one command spins up the API, da
 
 ## ✨ Key Features
 
-| Domain        | What you get                                                         |
-| ------------- | -------------------------------------------------------------------- |
-| **Training**  | Goal-based plans (weight-loss, fitness, muscle gain)                 |
-| **Nutrition** | Auto-generated menus respecting allergies & macros                   |
-| **Scheduling**| Class registration, cancellations & reminders                        |
-| **Admin**     | User / trainer management, reports & analytics                       |
-| **Chatbot**   | TinyLLaMA (via Ollama) answers health questions                      |
-| **Observability** | Prometheus metrics + pre-built Grafana dashboards               |
-| **Security**  | JWT auth, RBAC, hashed passwords                                     |
+| Domain            | What you get                                         |
+| ----------------- | ---------------------------------------------------- |
+| **Training**      | Goal-based plans (weight-loss, fitness, muscle gain) |
+| **Nutrition**     | Auto-generated menus respecting allergies & macros   |
+| **Scheduling**    | Class registration, cancellations & reminders        |
+| **Admin**         | User / trainer management, reports & analytics       |
+| **Chatbot**       | TinyLLaMA (via Ollama) answers health questions      |
+| **Observability** | Prometheus metrics + pre-built Grafana dashboards    |
+| **Security**      | JWT auth, RBAC, hashed passwords                     |
 
 ---
 
 ## 🔧 Tech Stack
 
-| Layer         | Tech / Tooling                                   |
-| ------------- | ------------------------------------------------ |
-| **Backend**   | Python 3.11 · FastAPI · Uvicorn                  |
-| **Database**  | MySQL 8 (dockerised)                             |
-| **Frontend**  | Jinja templates + static HTML/CSS (placeholder)  |
-| **LLM**       | Ollama container running TinyLLaMA 3B            |
-| **Monitoring**| Prometheus v2 · Grafana 10 (auto-provisioned)    |
-| **Dev Ops**   | Docker Compose · .env config · GitHub CI         |
+| Layer          | Tech / Tooling                           |
+| -------------- | ---------------------------------------- |
+| **Backend**    | Python 3.11 · FastAPI · Uvicorn          |
+| **Database**   | MySQL 8 (dockerised)                     |
+| **Frontend**   | Jinja templates + static HTML/CSS        |
+| **LLM**        | Ollama container running TinyLLaMA       |
+| **Monitoring** | Prometheus v2 · Grafana                  |
+| **DevOps**     | Docker Compose · .env config · GitHub CI |
 
 ---
 
 ## 🏗️ Repository Layout
 
 ```text
-DailyFit/
+new-dailyFit/
 ├── backend/           ← FastAPI application (routers, services, models)
 ├── frontend/          ← HTML templates, CSS, images
-├── monitoring/
-│   ├── grafana/       ← Provisioning & dashboards
-│   └── prometheus/    ← prometheus.yml & rules
-├── sql/               ← Init.sql, seed scripts, migrations
+├── monitoring/        ← Prometheus & Grafana provisioning and dashboards
+├── sql/               ← Init scripts, seed data, migrations
 ├── tinyllama/         ← LLM utilities + prompt engineering helpers
-├── docker-compose.yaml
-├── startup.sh         ← Convenience script (build + up)
+├── docker-compose.yaml← Compose configuration for all services
+├── startup.sh         ← Convenience script (build, up, health-check spinner)
 ├── .env.example       ← Copy → .env and fill secrets
-└── README.md
+└── README.md          ← Project overview and usage
 ```
 
 ---
 
 ## 🚀 Quick Start
 
-```bash
-# 1) Clone & enter
-git clone https://github.com/<you>/DailyFit.git
-cd DailyFit
+1. **Clone & enter**:
 
-# 2) Copy env template and tweak ports / secrets
-cp .env.example .env
-nano .env            # or favourite editor
+   ```bash
+   git clone https://github.com/AlexBoyev/DailyfFit.git
+   cd DailyfFit
+   ```
 
-# 3) Launch the entire stack
-docker compose up -d --build
+2. **Install Python dependencies** (if running locally outside Docker):
 
-# 4) Open browser:
-#    • API docs:       http://localhost:8000/docs
-#    • Frontend:       http://localhost:8000
-#    • Grafana:        http://localhost:3000  (admin / admin)
-#    • Prometheus:     http://localhost:9090
-#    • TinyLLaMA chat: http://localhost:11434  (Ollama HTTP API)
-```
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-> **Tip:** `startup.sh` wraps the same command with log-follow and a health-check spinner.
+3. **Create your `.env`** from the example:
+
+   ```bash
+   cp .env.example .env
+   # Edit .env and set DB_USER, DB_PASSWORD, JWT_SECRET, etc.
+   ```
+
+4. **Launch the entire stack**:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+5. **Access the services**:
+
+   * **API docs:**     `http://localhost:8000/docs`
+   * **Frontend:**     `http://localhost:8000`
+   * **Grafana:**      `http://localhost:3030`
+   * **Prometheus:**   `http://localhost:9091/targets`
+   * **Ollama API:**   `http://localhost:11434`
 
 ---
 
 ## ⚙️ Configuration
 
-| Variable          | Purpose                               | Default              |
-| ----------------- | ------------------------------------- | -------------------- |
-| `DB_USER`         | MySQL username                        | `dailyfit`           |
-| `DB_PASS`         | MySQL password                        | `dailyfit`           |
-| `DB_NAME`         | Database name                         | `dailyfit`           |
-| `JWT_SECRET`      | HS256 secret key                      | change-me            |
-| `PROMETHEUS_PORT` | Prometheus scrape endpoint (backend)  | `8000/metrics`       |
-| `OLLAMA_MODEL`    | LLM model name                        | `tinyllama:latest`   |
+Copy `.env.example` → `.env` and set your values:
 
-Edit **`.env`** to override anything at run-time.
+| Variable          | Purpose                          | Default                |
+| ----------------- | -------------------------------- | ---------------------- |
+| `DB_USER`         | MySQL username                   | `root`                 |
+| `DB_PASSWORD`     | MySQL password                   | `yourpassword`         |
+| `DB_NAME`         | Database name                    | `dailyfit`             |
+| `JWT_SECRET`      | HS256 secret key                 | `change-me`            |
+| `PROMETHEUS_PORT` | FastAPI metrics port             | `8001`                 |
+| `GRAFANA_PORT`    | Host port for Grafana            | `3030`                 |
+| `PROMETHEUS_HOST` | Prometheus container scrape host | `host.docker.internal` |
+| `OLLAMA_MODEL`    | LLM model name                   | `tinyllama:latest`     |
 
 ---
 
 ## 📈 Monitoring Dashboards
 
-* **Prometheus** automatically scrapes FastAPI via [`prometheus-fastapi-instrumentator`](https://github.com/trallnag/prometheus-fastapi-instrumentator).
-* **Grafana** is pre-configured with:
-  * **API Latency & Throughput**
-  * **MySQL Queries / Connections**
-  * **Docker Resources**
-  * **LLM Usage & Token stats**
+* **Prometheus** auto-scrapes `/metrics` via `prometheus-fastapi-instrumentator`.
+* **Grafana** is provisioned from `monitoring/grafana/datasources/` and imports all JSON under `monitoring/grafana/dashboards/` via `dashboards.yaml`.
 
-Dashboards live in `monitoring/grafana/dashboards/` and are auto-imported on first run.
+Your pre-built dashboards include:
+
+* **API Latency & Throughput**
+* **MySQL Activity**
+* **Docker Resource Usage**
+* **TinyLLaMA Token Stats**
 
 ---
 
 ## 🧪 Testing
 
 ```bash
-# run pytest unit + integration tests
+# Run pytest inside the backend container
 docker compose exec backend pytest -q
 ```
 
-CI will fail on merge requests if tests or formatting (ruff / black) break.
+CI will enforce formatting (black, ruff) and test coverage.
 
 ---
 
-## 🤖 TinyLLaMA Usage
+## 🤖 TinyLLaMA (via Ollama)
 
 ```bash
-curl -s -X POST http://localhost:11434/api/generate   -d '{"model":"tinyllama", "prompt":"Give me a 3-day workout plan"}'
+curl -X POST http://localhost:11434/api/generate \
+  -d '{"model":"tinyllama","prompt":"Give me a 3-day workout plan"}'
 ```
 
-The backend exposes `/chat` which pipes authenticated user data (nutrition logs, weight history) into TinyLLaMA for personalised advice.
-
-
-* WebSocket live-class streaming  
+Your FastAPI `/chat` endpoint also integrates user data for personalized advice.
 
 ---
 
 ## 📝 License
 
 Distributed under the **MIT License**. See `LICENSE` for details.
-
