@@ -32,6 +32,7 @@ from docker_manager import (
     is_docker_running, is_container_running,
     initialize_docker, ensure_schema_loaded
 )
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # ────────────────────────────────────────────────────────────────────
 # 1. ENV / CONFIG
@@ -72,6 +73,7 @@ app = FastAPI(debug=True)
 app.mount("/static", StaticFiles(directory=str(WEB)), name="static")
 app.mount("/images", StaticFiles(directory=str(WEB / "images")), name="images")
 templates = Jinja2Templates(directory=str(WEB))
+Instrumentator().instrument(app).expose(app)
 
 # ────────────────────────────────────────────────────────────────────
 # 4. Helpers
