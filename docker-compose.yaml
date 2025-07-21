@@ -49,7 +49,6 @@ services:
     restart: unless-stopped
     ports:
       - "11434:11434"
-    # Mount your host ~/.ollama (with your login + any pre-pulled models)
     volumes:
       - ~/.ollama:/root/.ollama:ro
     entrypoint:
@@ -57,12 +56,9 @@ services:
       - -c
       - |
         set -e
-        echo "🔍 Checking Gemma model…"
         if ! ollama list | grep -q 'gemma3n:4b'; then
-          echo "⏳ Pulling gemma3n:4b…"
           ollama pull gemma3n:4b
         fi
-        echo "✅ Model ready – starting Ollama server"
         exec ollama serve --host 0.0.0.0 --port 11434 --threads 4
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:11434/v1/models || exit 1"]
@@ -71,38 +67,33 @@ services:
       retries: 5
 
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: dailyfit-api:latest
+    image: python:3.10-slim
     container_name: dailyfit-api
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    working_dir: /app
+    volumes:
+      - .:/app:ro
     environment:
+      # MySQL settings
       DB_HOST: mysql
       DB_PORT: 3306
       DB_NAME: "${DB_NAME}"
       DB_USER: root
       DB_PASSWORD: "${DB_PASSWORD}"
+      # Ollama settings
       OLLAMA_HOST: http://ollama:11434
       OLLAMA_KEEP_ALIVE: 5m0s
       OLLAMA_NUM_PARALLEL: 4
     depends_on:
       - mysql
       - ollama
-    entrypoint:
-      - sh
-      - -c
-      - |
-        echo "🔄 Waiting for Ollama…"
-        until curl -s http://ollama:11434/v1/models > /dev/null; do
-          echo -n "."
-          sleep 2
-        done
-        echo "\n✅ Ollama is up, starting API"
-        exec uvicorn main:app --host 0.0.0.0 --port 8080
+    entrypoint: ["sh", "-c"]
+    command: >
+      pip install --no-cache-dir -r requirements.txt &&
+      until curl -s http://ollama:11434/v1/models > /dev/null; do echo -n "."; sleep 2; done &&
+      uvicorn main:app --host 0.0.0.0 --port 8080
 
 volumes:
   mysql_data:
   grafana_data:
+  ollama_data:
