@@ -1,33 +1,6 @@
 version: '3.8'
 
 services:
-  api:
-    build:
-      context: .                # adjust if your Go Dockerfile lives elsewhere
-      dockerfile: Dockerfile    # or Dockerfile.api
-    image: dailyfit-api:latest
-    container_name: dailyfit-api
-    restart: unless-stopped
-    ports:
-      - "8080:8080"             # expose your Gin app; change if you listen on a different port
-    environment:
-      # Database (if your API needs it)
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_NAME: "${DB_NAME}"
-      DB_USER: root
-      DB_PASSWORD: "${DB_PASSWORD}"
-
-      # Ollama
-      OLLAMA_HOST: http://ollama:11434
-      # (optional tuning)
-      OLLAMA_KEEP_ALIVE: 5m0s
-      OLLAMA_NUM_PARALLEL: 4
-
-    depends_on:
-      - mysql
-      - ollama
-
   mysql:
     image: mysql:8
     container_name: dailyfit-mysql
@@ -61,28 +34,14 @@ services:
     environment:
       GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
       GF_PLUGIN_ALLOW_LOADING_UNSIGNED_PLUGINS: "grafana-metricsdrilldown-app"
-    volumes:
-      - grafana_data:/var/lib/grafana
-
-      # Provisioning: datasources
-      - type: bind
-        source: ./monitoring/grafana/datasources
-        target: /etc/grafana/provisioning/datasources
-        read_only: true
-
-      # Provisioning: dashboards
-      - type: bind
-        source: ./monitoring/grafana/dashboards/dashboards.yaml
-        target: /etc/grafana/provisioning/dashboards/dashboards.yaml
-        read_only: true
-      - type: bind
-        source: ./monitoring/grafana/dashboards
-        target: /var/lib/grafana/dashboards
-        read_only: true
-
     depends_on:
       - prometheus
       - mysql
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/dashboards/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
 
   ollama:
     image: ollama/ollama:latest
@@ -92,8 +51,40 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    entrypoint: >
-      sh -c "ollama pull gemma3n:latest && exec ollama serve"
+    entrypoint:
+      - sh
+      - -c
+      - >
+        ollama pull gemma3n:latest && exec ollama serve
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/v1/models"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dailyfit-api:latest
+    container_name: dailyfit-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # MySQL
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: "${DB_NAME}"
+      DB_USER: root
+      DB_PASSWORD: "${DB_PASSWORD}"
+      # Ollama
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_KEEP_ALIVE: 5m0s
+      OLLAMA_NUM_PARALLEL: 4
+    depends_on:
+      - mysql
+      - ollama
 
 volumes:
   mysql_data:
