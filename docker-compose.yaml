@@ -1,14 +1,8 @@
-# ─────────────────────────────────────────────────────────────────────────────
-#  DailyFit – infrastructure only: MySQL ▪ Prometheus ▪ Grafana ▪ Ollama
-#  Backend (FastAPI) runs on the host, *not* in Docker.
-# ─────────────────────────────────────────────────────────────────────────────
-
 services:
-  # ───────────────────────────────  MySQL 8  ───────────────────────────────
   mysql:
     image: mysql:8
     container_name: dailyfit-mysql
-    restart: always
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE:     ${DB_NAME}
@@ -16,42 +10,52 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./sql:/docker-entrypoint-initdb.d            # optional seed scripts
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-u", "root", "-p${DB_PASSWORD}"]
-      interval: 5s
-      timeout: 5s
-      retries: 6
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
-  # ─────────────────────────────  Prometheus  ─────────────────────────────
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
-    restart: always
+    restart: unless-stopped
     ports:
       - "9091:9090"
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
     volumes:
-      - ./monitoring/prometheus:/etc/prometheus:ro   # mount entire dir
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
-  # ───────────────────────────────  Grafana  ───────────────────────────────
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
-    restart: always
+    restart: unless-stopped
+    ports:
+      - "3030:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      # Persist Grafana data
+      - grafana_data:/var/lib/grafana
+
+      # ─── Bind exactly your host datasources folder ─────────────────────────
+      - type: bind
+        source: ./monitoring/grafana/datasources
+        target: /etc/grafana/provisioning/datasources
+        read_only: true
+
+      # ─── Bind your dashboards provider YAML ────────────────────────────────
+      - type: bind
+        source: ./monitoring/grafana/dashboards/dashboards.yaml
+        target: /etc/grafana/provisioning/dashboards/dashboards.yaml
+        read_only: true
+
+      # ─── Bind your actual JSON dashboards ────────────────────────────────
+      - type: bind
+        source: ./monitoring/grafana/dashboards
+        target: /var/lib/grafana/dashboards
+        read_only: true
+
     depends_on:
       - prometheus
-    ports:
-      - "3030:3000"        # UI now on http://localhost:3030/
-    env_file:
-      - .env
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
 
-  # ───────────────────────────────  Ollama  ───────────────────────────────
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
@@ -60,8 +64,13 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+    entrypoint: >
+      sh -c "
+        ollama serve & 
+        sleep 10 && 
+        ollama pull gemma3n:latest
+      "
 
-# ───────────────────────────────  named volumes  ─────────────────────────────
 volumes:
   mysql_data:
   grafana_data:
