@@ -1,13 +1,11 @@
-version: '3.8'
-
 services:
   mysql:
     image: mysql:8
     container_name: dailyfit-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
-      MYSQL_DATABASE:     "${DB_NAME}"
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE:     ${DB_NAME}
     ports:
       - "3306:3306"
     volumes:
@@ -32,16 +30,31 @@ services:
     ports:
       - "3030:3000"
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
-      GF_PLUGIN_ALLOW_LOADING_UNSIGNED_PLUGINS: "grafana-metricsdrilldown-app"
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      # Persist Grafana data
+      - grafana_data:/var/lib/grafana
+
+      # ─── Bind exactly your host datasources folder ─────────────────────────
+      - type: bind
+        source: ./monitoring/grafana/datasources
+        target: /etc/grafana/provisioning/datasources
+        read_only: true
+
+      # ─── Bind your dashboards provider YAML ────────────────────────────────
+      - type: bind
+        source: ./monitoring/grafana/dashboards/dashboards.yaml
+        target: /etc/grafana/provisioning/dashboards/dashboards.yaml
+        read_only: true
+
+      # ─── Bind your actual JSON dashboards ────────────────────────────────
+      - type: bind
+        source: ./monitoring/grafana/dashboards
+        target: /var/lib/grafana/dashboards
+        read_only: true
+
     depends_on:
       - prometheus
-      - mysql
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./monitoring/grafana/dashboards/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
-      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
 
   ollama:
     image: ollama/ollama:latest
@@ -49,53 +62,14 @@ services:
     restart: unless-stopped
     ports:
       - "11434:11434"
-    # Use a Docker named volume so Ollama can read/write its models & creds
     volumes:
       - ollama_data:/root/.ollama
-    entrypoint:
-      - sh
-      - -c
-      - |
-        set -e
-        echo "🔍 Checking for gemma3n:4b…"
-        if ! ollama list | grep -q 'gemma3n:4b'; then
-          echo "⏳ Pulling gemma3n:4b…"
-          ollama pull gemma3n:4b
-        fi
-        echo "✅ Model ready – launching Ollama server"
-        exec ollama serve --host 0.0.0.0 --port 11434 --threads 4
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:11434/v1/models || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  api:
-    image: python:3.10-slim
-    container_name: dailyfit-api
-    restart: unless-stopped
-    working_dir: /app
-    volumes:
-      - .:/app:ro
-    environment:
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_NAME: "${DB_NAME}"
-      DB_USER: root
-      DB_PASSWORD: "${DB_PASSWORD}"
-      OLLAMA_HOST: http://ollama:11434
-      OLLAMA_KEEP_ALIVE: 5m0s
-      OLLAMA_NUM_PARALLEL: 4
-    depends_on:
-      - mysql
-      - ollama
-    entrypoint: ["sh", "-c"]
-    command: >
-      pip install --no-cache-dir -r requirements.txt &&
-      echo -n "⏳ Waiting for Ollama… " &&
-      until curl -s http://ollama:11434/v1/models > /dev/null; do echo -n "."; sleep 2; done &&
-      echo " ✅" &&
-      uvicorn main:app --host 0.0.0.0 --port 8080
+    entrypoint: >
+      sh -c "
+        ollama serve & 
+        sleep 10 && 
+        ollama pull gemma3n:latest
+      "
 
 volumes:
   mysql_data:
