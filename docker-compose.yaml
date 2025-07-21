@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
-      MYSQL_DATABASE: "${DB_NAME}"
+      MYSQL_DATABASE:     "${DB_NAME}"
     ports:
       - "3306:3306"
     volumes:
@@ -49,17 +49,21 @@ services:
     restart: unless-stopped
     ports:
       - "11434:11434"
+    # Mount your host ~/.ollama (with your login + any pre-pulled models)
     volumes:
-      - ollama_data:/root/.ollama
+      - ~/.ollama:/root/.ollama:ro
     entrypoint:
       - sh
       - -c
       - |
         set -e
-        echo "⏳ Pulling model…"
-        ollama pull gemma3n:latest
-        echo "✅ Model pulled, starting server on 0.0.0.0:11434"
-        exec ollama serve --host 0.0.0.0 --port 11434
+        echo "🔍 Checking Gemma model…"
+        if ! ollama list | grep -q 'gemma3n:4b'; then
+          echo "⏳ Pulling gemma3n:4b…"
+          ollama pull gemma3n:4b
+        fi
+        echo "✅ Model ready – starting Ollama server"
+        exec ollama serve --host 0.0.0.0 --port 11434 --threads 4
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:11434/v1/models || exit 1"]
       interval: 10s
@@ -76,21 +80,29 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # MySQL settings
       DB_HOST: mysql
       DB_PORT: 3306
       DB_NAME: "${DB_NAME}"
       DB_USER: root
       DB_PASSWORD: "${DB_PASSWORD}"
-      # Ollama settings
       OLLAMA_HOST: http://ollama:11434
       OLLAMA_KEEP_ALIVE: 5m0s
       OLLAMA_NUM_PARALLEL: 4
     depends_on:
       - mysql
       - ollama
+    entrypoint:
+      - sh
+      - -c
+      - |
+        echo "🔄 Waiting for Ollama…"
+        until curl -s http://ollama:11434/v1/models > /dev/null; do
+          echo -n "."
+          sleep 2
+        done
+        echo "\n✅ Ollama is up, starting API"
+        exec uvicorn main:app --host 0.0.0.0 --port 8080
 
 volumes:
   mysql_data:
   grafana_data:
-  ollama_data:
