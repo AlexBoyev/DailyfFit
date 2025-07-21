@@ -31,7 +31,7 @@ Everything runs locally with Docker Compose — one command spins up the API, da
 | **Admin**         | User / trainer management, reports & analytics       |
 | **Chatbot**       | TinyLLaMA (via Ollama) answers health questions      |
 | **Observability** | Prometheus metrics + pre-built Grafana dashboards    |
-| **Security**      | JWT auth, RBAC, hashed passwords                     |
+| **Security**      | JWT auth, RBAC, hashed passwords, Captcha            |
 
 ---
 
