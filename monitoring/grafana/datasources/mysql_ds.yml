@@ -1,12 +1,16 @@
 apiVersion: 1
+
 datasources:
   - name: DailyFit MySQL
     type: mysql
     uid: dailyfit-mysql
-    host: dailyfit-mysql:3306
+    access: proxy
+    url: dailyfit-mysql:3306
     database: dailyfit
-    user: root                 # or a readonly user
+    user: root
     secureJsonData:
-      password: ${DB_PASSWORD} # Grafana reads env-vars too
+      password: ${DB_PASSWORD}
     isDefault: false
     version: 1
+    jsonData:
+      tlsSkipVerify: true
