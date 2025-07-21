@@ -49,16 +49,20 @@ services:
     restart: unless-stopped
     ports:
       - "11434:11434"
+    # use a Docker named volume so Ollama can cache models & credentials
     volumes:
-      - ~/.ollama:/root/.ollama:ro
+      - ollama_data:/root/.ollama
     entrypoint:
       - sh
       - -c
       - |
         set -e
+        echo "🔍 Ensuring gemma3n:4b is available…"
         if ! ollama list | grep -q 'gemma3n:4b'; then
+          echo "⏳ Pulling gemma3n:4b…"
           ollama pull gemma3n:4b
         fi
+        echo "✅ Model ready – starting Ollama server"
         exec ollama serve --host 0.0.0.0 --port 11434 --threads 4
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:11434/v1/models || exit 1"]
@@ -74,13 +78,11 @@ services:
     volumes:
       - .:/app:ro
     environment:
-      # MySQL settings
       DB_HOST: mysql
       DB_PORT: 3306
       DB_NAME: "${DB_NAME}"
       DB_USER: root
       DB_PASSWORD: "${DB_PASSWORD}"
-      # Ollama settings
       OLLAMA_HOST: http://ollama:11434
       OLLAMA_KEEP_ALIVE: 5m0s
       OLLAMA_NUM_PARALLEL: 4
@@ -90,10 +92,7 @@ services:
     entrypoint: ["sh", "-c"]
     command: >
       pip install --no-cache-dir -r requirements.txt &&
+      echo -n "⏳ Waiting for Ollama… " &&
       until curl -s http://ollama:11434/v1/models > /dev/null; do echo -n "."; sleep 2; done &&
-      uvicorn main:app --host 0.0.0.0 --port 8080
-
-volumes:
-  mysql_data:
-  grafana_data:
-  ollama_data:
+      echo " ✅" &&
+      uvicorn main:app --host 0.0.0.0 --port 808
