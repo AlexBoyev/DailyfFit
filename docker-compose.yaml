@@ -1,11 +1,13 @@
+version: '3.8'
+
 services:
   mysql:
     image: mysql:8
     container_name: dailyfit-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE:     ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE: "${DB_NAME}"
     ports:
       - "3306:3306"
     volumes:
@@ -30,24 +32,23 @@ services:
     ports:
       - "3030:3000"
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:-admin}"
+      GF_PLUGIN_ALLOW_LOADING_UNSIGNED_PLUGINS: "grafana-metricsdrilldown-app"
     volumes:
-      # Persist Grafana data
+      # Grafana internal DB & plugins
       - grafana_data:/var/lib/grafana
 
-      # ─── Bind exactly your host datasources folder ─────────────────────────
+      # Provisioning: datasources
       - type: bind
         source: ./monitoring/grafana/datasources
         target: /etc/grafana/provisioning/datasources
         read_only: true
 
-      # ─── Bind your dashboards provider YAML ────────────────────────────────
+      # Provisioning: dashboards
       - type: bind
         source: ./monitoring/grafana/dashboards/dashboards.yaml
         target: /etc/grafana/provisioning/dashboards/dashboards.yaml
         read_only: true
-
-      # ─── Bind your actual JSON dashboards ────────────────────────────────
       - type: bind
         source: ./monitoring/grafana/dashboards
         target: /var/lib/grafana/dashboards
@@ -55,6 +56,7 @@ services:
 
     depends_on:
       - prometheus
+      - mysql
 
   ollama:
     image: ollama/ollama:latest
@@ -65,11 +67,7 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     entrypoint: >
-      sh -c "
-        ollama serve & 
-        sleep 10 && 
-        ollama pull gemma3n:latest
-      "
+      sh -c "ollama pull gemma3n:latest && exec ollama serve"
 
 volumes:
   mysql_data:
