@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mysql:
     image: mysql:8
@@ -5,7 +7,7 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE:     ${DB_NAME}
+      MYSQL_DATABASE: ${DB_NAME}
     ports:
       - "3306:3306"
     volumes:
@@ -32,33 +34,25 @@ services:
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
     volumes:
-      # Persist Grafana data
       - grafana_data:/var/lib/grafana
-
-      # ─── Bind exactly your host datasources folder ─────────────────────────
       - type: bind
         source: ./monitoring/grafana/datasources
         target: /etc/grafana/provisioning/datasources
         read_only: true
-
-      # ─── Bind your dashboards provider YAML ────────────────────────────────
       - type: bind
         source: ./monitoring/grafana/dashboards/dashboards.yaml
         target: /etc/grafana/provisioning/dashboards/dashboards.yaml
         read_only: true
-
-      # ─── Bind your actual JSON dashboards ────────────────────────────────
       - type: bind
         source: ./monitoring/grafana/dashboards
         target: /var/lib/grafana/dashboards
         read_only: true
-
     depends_on:
       - prometheus
 
   ollama:
     image: ollama/ollama:latest
-    container_name: ollama
+    container_name: ollamac
     restart: unless-stopped
     ports:
       - "11434:11434"
@@ -66,9 +60,10 @@ services:
       - ollama_data:/root/.ollama
     entrypoint: >
       sh -c "
-        ollama serve & 
-        sleep 10 && 
-        ollama pull gemma3n:latest
+        ollama serve &
+        sleep 10 &&
+        ollama pull gemma3n:latest &&
+        wait
       "
 
 volumes:
