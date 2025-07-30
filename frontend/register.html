@@ -66,11 +66,41 @@
       <h2>Create Your Account</h2>
       <form id="registerForm">
         <input type="text" id="name" placeholder="Full Name" required />
+
         <input type="email" id="email" placeholder="Email" required />
-        <input type="password" id="password" placeholder="Password" required />
-        <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
-        <input type="text" id="phone" placeholder="Phone (digits only)" required pattern="\d+" title="Digits only" />
+
+        <!-- Enforced password complexity -->
+        <input
+          type="password"
+          id="password"
+          placeholder="Password (min 8 chars, upper, lower, number, symbol)"
+          required
+          pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}"
+          title="Must be ≥8 chars, include uppercase, lowercase, number & symbol"
+        />
+
+        <input
+          type="password"
+          id="confirmPassword"
+          placeholder="Confirm Password"
+          required
+          pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}"
+          title="Must match the criteria above"
+        />
+
+        <input
+          type="tel"
+          id="phone"
+          placeholder="Phone (10 digits)"
+          required
+          pattern="^\d{10}$"
+          maxlength="10"
+          inputmode="numeric"
+          title="Enter exactly 10 digits (numbers only)"
+        />
+
         <input type="text" id="address" placeholder="Address" required />
+
         <button type="submit">Register</button>
       </form>
       <div class="bottom-text">
@@ -83,25 +113,37 @@
   <script>
     document.getElementById('registerForm').addEventListener('submit', async e => {
       e.preventDefault();
-      const pwd = document.getElementById('password').value.trim();
-      const cp  = document.getElementById('confirmPassword').value.trim();
-      if (pwd !== cp) {
+
+      const pwd  = document.getElementById('password');
+      const cpwd = document.getElementById('confirmPassword');
+      if (!pwd.checkValidity()) {
+        return document.getElementById('response').innerText = pwd.title;
+      }
+      if (pwd.value !== cpwd.value) {
         return document.getElementById('response').innerText = 'Passwords do not match.';
       }
+
+      const phoneEl = document.getElementById('phone');
+      if (!phoneEl.checkValidity()) {
+        return document.getElementById('response').innerText = phoneEl.title;
+      }
+
       const payload = {
-        name: document.getElementById('name').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        password: pwd,
-        phone: document.getElementById('phone').value.trim(),
-        address: document.getElementById('address').value.trim()
+        name:        document.getElementById('name').value.trim(),
+        email:       document.getElementById('email').value.trim(),
+        password:    pwd.value.trim(),
+        phone:       phoneEl.value.trim(),
+        address:     document.getElementById('address').value.trim()
       };
+
       try {
-        const res = await fetch('/register', {
-          method: 'POST',
+        const res  = await fetch('/register', {
+          method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body:    JSON.stringify(payload)
         });
         const data = await res.json();
+
         if (res.ok) {
           window.location.href = '/login';
         } else {
