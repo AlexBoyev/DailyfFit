@@ -77,6 +77,8 @@
     td select{
       padding:.35rem .6rem;font:inherit;border:1px solid #bbb;border-radius:4px
     }
+    /* sortable indicator */
+    th.sortable:hover { text-decoration:underline; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -120,11 +122,21 @@
 
     <!-- user table -->
     <h2>Existing users</h2>
+    <!-- Search box -->
+    <input id="searchInput" type="text" placeholder="Search by email or name…"
+           style="padding:.5rem .75rem;font:inherit;border:1px solid #ccc;border-radius:4px;
+                  width:100%;max-width:300px;margin-bottom:1rem">
+
     <table>
       <thead>
-        <tr><th>Email</th><th>Full&nbsp;name</th><th>Plan</th><th>Actions</th></tr>
+        <tr>
+          <th class="sortable">Email</th>
+          <th class="sortable">Full&nbsp;name</th>
+          <th class="sortable">Plan</th>
+          <th>Actions</th>
+        </tr>
       </thead>
-      <tbody>
+      <tbody data-sort-col="" data-sort-asc="false">
       {% for u in users %}
         <tr>
           <td>{{ u.email }}</td>
@@ -139,7 +151,6 @@
                     {{ p }}
                   </option>
                 {% endfor %}
-                {# in case DB has a plan outside the default list #}
                 {% if u.membership_plan not in default_plans %}
                   <option value="{{ u.membership_plan }}" selected>{{ u.membership_plan }}</option>
                 {% endif %}
@@ -172,6 +183,43 @@
         sb.style.width='0';
       }
     });
+
+    // Real-time filter
+    document.getElementById('searchInput').addEventListener('input', function() {
+      const filter = this.value.trim().toLowerCase();
+      document.querySelectorAll('table tbody tr').forEach(row => {
+        const email = row.children[0].innerText.toLowerCase();
+        const name  = row.children[1].innerText.toLowerCase();
+        row.style.display = (email.includes(filter) || name.includes(filter)) ? '' : 'none';
+      });
+    });
+
+    // Column sorting
+    document.querySelectorAll('th.sortable').forEach((header, index) => {
+      header.addEventListener('click', () => sortTable(index));
+    });
+
+    function sortTable(colIndex) {
+      const tbody = document.querySelector('table tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const currentAsc = tbody.getAttribute('data-sort-col') == colIndex && tbody.getAttribute('data-sort-asc') === 'true';
+      const asc = !currentAsc;
+
+      rows.sort((a, b) => {
+        let aText = a.children[colIndex].innerText.trim().toLowerCase();
+        let bText = b.children[colIndex].innerText.trim().toLowerCase();
+        // numeric vs alphabetical
+        if (!isNaN(aText) && !isNaN(bText)) {
+          return asc ? aText - bText : bText - aText;
+        }
+        return asc ? aText.localeCompare(bText) : bText.localeCompare(aText);
+      });
+
+      // reattach
+      rows.forEach(row => tbody.appendChild(row));
+      tbody.setAttribute('data-sort-col', colIndex);
+      tbody.setAttribute('data-sort-asc', asc);
+    }
   </script>
 </body>
 </html>
