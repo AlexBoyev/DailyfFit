@@ -16,14 +16,8 @@
           "rawSql": "SELECT membership_plan AS Plan, COUNT(*) AS Members\nFROM Users\nGROUP BY membership_plan\nORDER BY Members DESC;"
         }
       ],
-      "options": {
-        "orientation": "auto",
-        "showValue": "auto"
-      },
-      "fieldConfig": {
-        "defaults": { "unit": "short" },
-        "overrides": []
-      },
+      "options": { "orientation": "auto", "showValue": "auto" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 10 }
     },
     {
@@ -37,15 +31,31 @@
           "rawSql": "SELECT C.name AS Class, COUNT(*) AS Registrations\nFROM ClassRegistrations R\nJOIN Classes C ON C.id = R.class_id\nGROUP BY Class\nORDER BY Registrations DESC;"
         }
       ],
-      "options": {
-        "orientation": "auto",
-        "showValue": "auto"
-      },
+      "options": { "orientation": "auto", "showValue": "auto" },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 10 }
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Earnings by Membership Plan",
+      "datasource": { "type": "mysql", "uid": "dailyfit-mysql" },
+      "targets": [
+        {
+          "format": "table",
+          "rawSql": "SELECT\n  IFNULL(membership_plan, 'Total') AS Plan,\n  COUNT(*) AS Members,\n  SUM(\n    CASE membership_plan\n      WHEN 'Bronze'   THEN 29\n      WHEN 'Silver'   THEN 49\n      WHEN 'Gold'     THEN 79\n      WHEN 'Platinum' THEN 119\n      ELSE 0\n    END\n  ) AS Revenue\nFROM Users\nGROUP BY membership_plan WITH ROLLUP;"
+        }
+      ],
       "fieldConfig": {
         "defaults": { "unit": "short" },
         "overrides": []
       },
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 10 }
+      "options": {
+        "showHeader": true,
+        "pagination": { "enabled": false },
+        "pageSize": 0
+      },
+      "gridPos": { "x": 0, "y": 10, "w": 24, "h": 8 }
     }
   ]
 }
