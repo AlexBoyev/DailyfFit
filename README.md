@@ -155,7 +155,9 @@ curl -X POST http://localhost:11434/api/generate \
 Your FastAPI `/chat` endpoint also integrates user data for personalized advice.
 
 ---
-
+![Login](images/login.jpeg)
+![AI Output](images/AI%20Output.jpeg)
+![Profile](images/profile.jpeg)
 ## 📝 License
 
 Distributed under the **MIT License**. See `LICENSE` for details.
